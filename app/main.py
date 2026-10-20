@@ -37,11 +37,23 @@ app = FastAPI(
 )
 
 
-@app.get("/health")
 @app.get("/health/live")
 def health_live():
     return {"status": "ok"}
 
+
+@app.get("/health")
+@app.get("/health/ready")
+def health_ready():
+    try:
+        client.admin.command("ping")
+    except PyMongoError:
+        raise HTTPException(
+            status_code=503,
+            detail="MongoDB no disponible",
+        ) from None
+
+    return {"status": "ok", "db": "connected"}
 
 @app.post(
     "/documents",
