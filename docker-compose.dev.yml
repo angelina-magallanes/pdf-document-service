@@ -1,0 +1,7 @@
+services:
+  documents:
+    ports:
+      - "127.0.0.1:${DOCUMENTS_HOST_PORT:-8001}:${PORT:-8000}"
+  mongodb:
+    ports:
+      - "127.0.0.1:${MONGODB_HOST_PORT:-27017}:27017"

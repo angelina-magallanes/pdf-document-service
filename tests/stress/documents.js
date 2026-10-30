@@ -1,0 +1,42 @@
+import http from 'k6/http';
+import { check } from 'k6';
+import { sha256 } from 'k6/crypto';
+
+// Prueba pequeña de persistencia: crea, consulta por checksum y elimina.
+// Usar una base de pruebas aislada. Cada iteración genera un checksum propio.
+export const options = {
+  vus: Number(__ENV.VUS || 5),
+  duration: __ENV.DURATION || '15s',
+  thresholds: {
+    http_req_failed: ['rate<0.01'],
+    checks: ['rate>0.99'],
+  },
+};
+
+const base = (__ENV.BASE_URL || 'http://documents.universidad.localhost').replace(/\/$/, '');
+const runId = __ENV.RUN_ID;
+if (!runId) throw new Error('Definir RUN_ID único para esta ejecución');
+
+export default function () {
+  const checksum = sha256(`${runId}-${__VU}-${__ITER}`, 'hex');
+  const params = {
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Request-ID': `load-${runId}-${__VU}-${__ITER}`,
+    },
+    timeout: '5s',
+  };
+  const created = http.post(`${base}/documents`, JSON.stringify({
+    checksum, content: '# Documento de carga\nTexto de prueba.', page_count: 1,
+    filename: 'load-test.pdf',
+  }), params);
+  if (!check(created, { 'creado 201': r => r.status === 201 })) return;
+  const documentId = created.json('id');
+  const found = http.get(`${base}/documents/by-checksum/${checksum}`, params);
+  check(found, {
+    'consulta 200': r => r.status === 200,
+    'mismo documento': r => r.status === 200 && r.json('id') === documentId,
+  });
+  const deleted = http.del(`${base}/documents/${documentId}`, null, params);
+  check(deleted, { 'eliminado 204': r => r.status === 204 });
+}

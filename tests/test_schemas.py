@@ -24,7 +24,7 @@ def test_rechaza_checksum_invalido(checksum):
         )
 
 
-@pytest.mark.parametrize("page_count", [0, -1, "2", True])
+@pytest.mark.parametrize("page_count", [0, -1, "2", True, 2**63])
 def test_rechaza_cantidad_de_paginas_invalida(page_count):
     with pytest.raises(ValidationError):
         DocumentCreate(
