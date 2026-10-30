@@ -6,6 +6,17 @@ SHA-256 y ofrece CRUD por HTTP. El orquestador calcula el checksum de los bytes
 del PDF original y envía el resultado del extractor; este servicio no recibe ni
 extrae PDFs y no usa Redis.
 
+Para trabajar juntas con la versión que Lourdes ya probó, ejecutar:
+
+```bash
+python scripts/integration_lourdes.py
+```
+
+La [guía de integración con Lourdes](integration/lourdes/README.md) fija Documents
+en `8e1214d`, la API en `354926f` y el Extractor en `5f0de84`, y levanta un MongoDB 7
+exclusivo para cada prueba. El resto de esta guía describe el código de desarrollo
+actual de Documents; la prueba conjunta construye la revisión histórica fijada.
+
 ## Contrato para la API
 
 | Método | Ruta | Resultado |

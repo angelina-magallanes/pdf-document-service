@@ -1,5 +1,9 @@
 # Validación de Document Service
 
+La prueba conjunta posterior con Documents `8e1214d`, la versión fijada por Lourdes,
+está registrada en [Integración con Lourdes](../integration/lourdes/validation.md).
+Este informe conserva los resultados del código de desarrollo `8be80ce`.
+
 Validación local del 29/10/2026. Los documentos adjuntos se usaron como referencia
 de arquitectura; las rutas y los campos se contrastaron con el consumidor actual
 de `pdf-api-service`.
