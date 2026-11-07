@@ -1,5 +1,16 @@
 # Validación de Document Service
 
+## Seguimiento del acuerdo con infraestructura (07/11/2026)
+
+Jere informó MongoDB 7 y la base `pdf_extractext_integration` para integración,
+y `stop_grace_period: 30s` en infraestructura. El Dockerfile de desarrollo se
+ajustó de 25 a 10 segundos de espera máxima de Uvicorn. Esto no modifica los
+resultados históricos de este informe ni la revisión `8e1214d` fijada por Lourdes.
+Faltan construir/desplegar la nueva imagen y repetir la caída de réplica con
+tráfico para comprobar su efecto. La atribución del timeout a keep-alive no está
+confirmada. La URI y el aislamiento de la instancia deben verificarse con Jere;
+un nombre de base separado no prueba que el servidor MongoDB sea exclusivo.
+
 La prueba conjunta posterior con Documents `8e1214d`, la versión fijada por Lourdes,
 está registrada en [Integración con Lourdes](../integration/lourdes/validation.md).
 Este informe conserva los resultados del código de desarrollo `8be80ce`.
