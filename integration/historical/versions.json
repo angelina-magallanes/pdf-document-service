@@ -1,0 +1,14 @@
+{
+  "api": {
+    "repository": "https://github.com/Lourdesrizza/pdf-api-service.git",
+    "commit": "354926f584470ce2ce83867d36c159a501f94211"
+  },
+  "extractor": {
+    "repository": "https://github.com/MaitePuente/pdf-extractor-service.git",
+    "commit": "5f0de842ee1bcdcd23ce1383427f6b757d8882fa"
+  },
+  "documents": {
+    "repository": "https://github.com/angelina-magallanes/pdf-document-service.git",
+    "commit": "8e1214d0ec82df3806c096840e3dea12defe69d5"
+  }
+}
