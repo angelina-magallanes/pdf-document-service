@@ -17,6 +17,12 @@ en `8e1214d`, la API en `354926f` y el Extractor en `5f0de84`, y levanta un Mong
 exclusivo para cada prueba. El resto de esta guía describe el código de desarrollo
 actual de Documents; la prueba conjunta construye la revisión histórica fijada.
 
+La [comprobación del Extractor actualizado con Documents actual](integration/compatibility/README.md)
+usa un manifiesto separado. El 08/11/2026 las imágenes construyeron, pero dos
+intentos fallaron por timeout al iniciar el worker del Extractor; Documents y
+MongoDB pasaron sus health checks. Esta combinación todavía no tiene aprobación
+del flujo completo; ver el [informe](integration/compatibility/validation.md).
+
 ## Contrato para la API
 
 | Método | Ruta | Resultado |
@@ -103,7 +109,11 @@ límites para Documents. La versión del Extractor sigue pendiente: Maité infor
 imagen sin comprobar por falta de Docker Desktop. Antes de actualizar la
 integración, resolver la diferencia, publicar los cambios, acordar el commit y
 construir/verificar la imagen identificada por ese commit y, para desplegar,
-preferentemente por digest.
+preferentemente por digest. **Seguimiento del 08/11/2026:** Maité publicó el
+commit `dab2c4d`, que incluye recuperación del worker. La
+[prueba actualizada](integration/compatibility/validation.md) construyó su imagen,
+pero no aprobó el arranque en esta VM; el mensaje anterior se conserva como
+antecedente, no como descripción del estado actual de su árbol de trabajo.
 
 La integración reproducible conserva las revisiones históricas de
 [`versions.json`](integration/lourdes/versions.json). Sus pruebas anteriores no
