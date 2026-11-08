@@ -217,3 +217,61 @@ def test_openapi_documenta_duplicados_y_errores(client):
     assert set(post["422"]["content"]) == {"application/problem+json"}
     assert set(post["503"]["content"]) == {"application/problem+json"}
     assert "/documents/by-checksum/{checksum}" in spec["paths"]
+
+
+def test_saturacion_rechaza_sin_consultar_mongo_y_mantiene_liveness(client, storage, monkeypatch):
+    from threading import BoundedSemaphore
+
+    limiter = BoundedSemaphore(1)
+    assert limiter.acquire(blocking=False)
+    monkeypatch.setattr(api, "admission", limiter)
+    collection, mongo = storage
+    response = client.get("/documents", headers={"X-Request-ID": "saturated"})
+    assert response.status_code == 503
+    assert response.headers["retry-after"] == "1"
+    assert response.json()["request_id"] == "saturated"
+    assert client.get("/health/live").status_code == 200
+    assert client.get("/health/ready").status_code == 503
+    collection.find.assert_not_called()
+    mongo.admin.command.assert_not_called()
+    limiter.release()
+    assert client.get("/health/ready").status_code == 200
+
+
+def test_admision_se_libera_si_mongo_falla(client, storage, monkeypatch):
+    from threading import BoundedSemaphore
+
+    monkeypatch.setattr(api, "admission", BoundedSemaphore(1))
+    collection, _ = storage
+    collection.find_one.side_effect = ServerSelectionTimeoutError("unavailable")
+    assert client.get("/documents/507f1f77bcf86cd799439011").status_code == 503
+    assert client.get("/health/ready").status_code == 200
+
+
+def test_otra_peticion_falla_rapido_mientras_una_operacion_ocupa_el_cupo(client, storage, monkeypatch):
+    from concurrent.futures import ThreadPoolExecutor
+    from threading import BoundedSemaphore, Event
+
+    entered, finish = Event(), Event()
+    collection, _ = storage
+    document = {"_id": ObjectId(), "checksum": "a" * 64, "content": "# x", "page_count": 1,
+                "filename": "x.pdf", "created_at": datetime.now(timezone.utc)}
+
+    def slow_read(*args, **kwargs):
+        entered.set()
+        assert finish.wait(5)
+        return document
+
+    monkeypatch.setattr(api, "admission", BoundedSemaphore(1))
+    collection.find_one.side_effect = slow_read
+    with ThreadPoolExecutor(max_workers=1) as executor:
+        first = executor.submit(client.get, "/documents/507f1f77bcf86cd799439011")
+        try:
+            assert entered.wait(5)
+            second = client.get("/documents/507f1f77bcf86cd799439011")
+            assert second.status_code == 503
+            assert second.headers["retry-after"] == "1"
+        finally:
+            finish.set()
+        assert first.result(timeout=5).status_code == 200
+    assert client.get("/health/ready").status_code == 200

@@ -214,7 +214,10 @@ Todavía no se verificó que este ajuste resuelva el timeout de 5 s del consumid
 | --- | --- | --- |
 | `MONGODB_URI` | `mongodb://127.0.0.1:27017` en Python; `mongodb://mongodb:27017` en Compose | Conexión a MongoDB. |
 | `MONGODB_DATABASE` | `pdf_extractext` | Base de documentos. |
-| `MONGODB_TIMEOUT_MS` | `1500` | Presupuesto por operación y límites de conexión, selección, socket y espera de pool. Entero mayor que cero. |
+| `MONGODB_TIMEOUT_MS` | `1500` | Presupuesto por operación y límites de conexión, selección y socket. Entero mayor que cero. |
+| `MONGODB_POOL_SIZE` | `16` | Máximo de conexiones de aplicación por servidor MongoDB y proceso. |
+| `MONGODB_WAIT_QUEUE_MS` | `200` | Espera máxima por una conexión disponible del pool, en milisegundos. |
+| `DOCUMENTS_MAX_IN_FLIGHT` | `16` | Máximo de solicitudes de Documents y readiness admitidas simultáneamente por proceso. |
 | `PORT` | `8000` | Puerto de Uvicorn en Docker y de sus health checks. |
 | `LOG_LEVEL` | `INFO` | Nivel de logging. |
 | `TRAEFIK_DOCUMENTS_HOST` | `documents.universidad.localhost` | Host del router HTTP. |
@@ -227,6 +230,22 @@ El timeout predeterminado es menor que los 2 segundos usados por la API para
 readiness. Si se ajusta, revisar también los timeouts de la API y los health
 checks. El arranque comprueba MongoDB y crea el índice único; si falla, la
 aplicación no comienza a servir solicitudes y cierra el cliente.
+
+El límite de solicitudes no crea una cola: cuando está completo, las rutas de
+documentos y readiness responden 503 con `Retry-After: 1`; `/health/live` sigue
+disponible. El permiso se libera al terminar la operación, incluso ante errores.
+Cada proceso tiene su propio límite y pool, por lo que el máximo combinado crece
+con la cantidad de procesos y réplicas. PyMongo también puede abrir conexiones de
+monitoreo además de las conexiones del pool. Estos valores son puntos de partida:
+medir carga y uso de memoria antes de ajustarlos para el entorno compartido.
+
+El dominio y la interfaz del repositorio están en `app/domain.py`, la lógica de
+aplicación en `app/service.py`, y el adaptador de MongoDB en `app/repository.py`.
+Los modelos HTTP de `app/schemas.py` son DTO independientes de los registros
+MongoDB. Para admitir otra base hace falta implementar el repositorio, su ciclo de
+vida y la traducción de errores; no hay otro adaptador implementado. No se agrega
+Unit of Work ni Saga: las operaciones actuales son locales a un solo documento y
+el índice único de MongoDB garantiza la deduplicación entre réplicas.
 
 ## Desarrollo y pruebas
 
