@@ -25,7 +25,7 @@ jobs:
       - name: Install locked dependencies
         run: uv sync --locked
       - name: Unit and MongoDB integration tests
-        run: uv run --locked pytest -q
+        run: uv run --locked python -m pytest -q
       - name: Check exported production dependencies
         run: |
           uv export --locked --no-dev --no-emit-project -o requirements.txt
