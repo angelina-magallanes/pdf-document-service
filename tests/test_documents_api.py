@@ -7,6 +7,7 @@ from fastapi.testclient import TestClient
 from pymongo import MongoClient
 
 import app.main as api
+from app import dependencies
 
 pytestmark = pytest.mark.integration
 
@@ -27,8 +28,8 @@ def client(monkeypatch, api_token):
             os.getenv("MONGODB_TEST_URI", "mongodb://127.0.0.1:27017"),
             serverSelectionTimeoutMS=5000,
         )
-        monkeypatch.setattr(api, "client", app_mongo)
-        monkeypatch.setattr(api, "documents", collection)
+        monkeypatch.setattr(dependencies, "client", app_mongo)
+        monkeypatch.setattr(dependencies, "documents", collection)
         with TestClient(api.app, headers={"Authorization": f"Bearer {api_token}"}) as http_client:
             yield http_client
     finally:

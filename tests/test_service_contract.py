@@ -8,14 +8,15 @@ from fastapi.testclient import TestClient
 from pymongo.errors import DocumentTooLarge, DuplicateKeyError, ServerSelectionTimeoutError, WriteError
 
 import app.main as api
+from app import dependencies
 
 
 @pytest.fixture
 def storage(monkeypatch):
     collection = MagicMock()
     mongo = MagicMock()
-    monkeypatch.setattr(api, "documents", collection)
-    monkeypatch.setattr(api, "client", mongo)
+    monkeypatch.setattr(dependencies, "documents", collection)
+    monkeypatch.setattr(dependencies, "client", mongo)
     return collection, mongo
 
 
@@ -138,7 +139,7 @@ def test_error_de_validador_es_serializable(client, payload):
 
 
 def test_correlacion_en_respuestas_y_logs(client, caplog):
-    with caplog.at_level(logging.INFO, logger="app.main"):
+    with caplog.at_level(logging.INFO, logger="app.middleware"):
         response = client.get("/health/live", headers={
             "X-Request-ID": "request-123", "X-Audit-Id": "audit-456",
         })
@@ -224,7 +225,7 @@ def test_saturacion_rechaza_sin_consultar_mongo_y_mantiene_liveness(client, stor
 
     limiter = BoundedSemaphore(1)
     assert limiter.acquire(blocking=False)
-    monkeypatch.setattr(api, "admission", limiter)
+    monkeypatch.setattr(dependencies, "admission", limiter)
     collection, mongo = storage
     response = client.get("/documents", headers={"X-Request-ID": "saturated"})
     assert response.status_code == 503
@@ -241,7 +242,7 @@ def test_saturacion_rechaza_sin_consultar_mongo_y_mantiene_liveness(client, stor
 def test_admision_se_libera_si_mongo_falla(client, storage, monkeypatch):
     from threading import BoundedSemaphore
 
-    monkeypatch.setattr(api, "admission", BoundedSemaphore(1))
+    monkeypatch.setattr(dependencies, "admission", BoundedSemaphore(1))
     collection, _ = storage
     collection.find_one.side_effect = ServerSelectionTimeoutError("unavailable")
     assert client.get("/documents/507f1f77bcf86cd799439011").status_code == 503
@@ -262,7 +263,7 @@ def test_otra_peticion_falla_rapido_mientras_una_operacion_ocupa_el_cupo(client,
         assert finish.wait(5)
         return document
 
-    monkeypatch.setattr(api, "admission", BoundedSemaphore(1))
+    monkeypatch.setattr(dependencies, "admission", BoundedSemaphore(1))
     collection.find_one.side_effect = slow_read
     with ThreadPoolExecutor(max_workers=1) as executor:
         first = executor.submit(client.get, "/documents/507f1f77bcf86cd799439011")

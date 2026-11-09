@@ -8,6 +8,7 @@ from pymongo.errors import DocumentTooLarge, OperationFailure, PyMongoError
 from starlette.exceptions import HTTPException
 
 from app.schemas import Problem
+from app.domain import DocumentNotFound, InvalidDocumentId
 
 logger = logging.getLogger(__name__)
 
@@ -65,3 +66,11 @@ async def database_error(request: Request, exc: PyMongoError):
 
 async def document_too_large(request: Request, exc: DocumentTooLarge | OperationFailure):
     return problem_response(request, 413, "El documento excede el tamaño permitido por MongoDB")
+
+
+async def domain_error(request: Request, exc: Exception):
+    if isinstance(exc, DocumentNotFound):
+        return problem_response(request, 404, "Documento no encontrado")
+    if isinstance(exc, InvalidDocumentId):
+        return problem_response(request, 422, "El ID debe tener 24 caracteres hexadecimales")
+    return problem_response(request, 409, "Conflicto al guardar el documento; reintentá")

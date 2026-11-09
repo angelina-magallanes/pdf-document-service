@@ -12,6 +12,7 @@ resultado. Document Service recibe JSON; no recibe PDFs ni utiliza Redis.
 ## Tecnologías
 
 - Python 3.14, FastAPI y Uvicorn para la API HTTP.
+- uv y `uv.lock` para resolver e instalar dependencias reproducibles.
 - MongoDB 7 y PyMongo para persistencia y conexiones.
 - Docker Compose y Traefik para ejecución y enrutamiento.
 - pytest para pruebas y k6 para una prueba de carga sencilla.
@@ -124,7 +125,10 @@ no incorpora en esta revisión un límite HTTP adicional del cuerpo.
 
 | Archivo | Responsabilidad |
 | --- | --- |
-| `app/main.py` | Rutas HTTP, correlación y límite de solicitudes. |
+| `app/main.py` | Composición de la aplicación y registro de componentes. |
+| `app/routes.py` | Rutas HTTP de documentos y salud. |
+| `app/middleware.py` | Autenticación previa al cuerpo, correlación y admisión. |
+| `app/dependencies.py` | Recursos compartidos, construcción del servicio y ciclo de vida. |
 | `app/auth.py` | Validación del secreto y autenticación Bearer. |
 | `app/schemas.py` | Modelos de entrada y salida de la API. |
 | `app/domain.py` | Modelo de documento, interfaz de repositorio y errores del dominio. |
@@ -204,18 +208,17 @@ de una réplica bajo tráfico debe comprobarse en el entorno de despliegue.
 ## Desarrollo y pruebas
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install -r requirements.txt
-python -m pytest -q -m 'not integration'
+uv sync --locked
+uv run --locked pytest -q -m 'not integration'
 ```
 
-En Windows, activar el entorno con `.venv\Scripts\Activate.ps1`. Las pruebas sin
+Instalar previamente [uv](https://docs.astral.sh/uv/getting-started/installation/).
+`uv sync` crea el entorno automáticamente, también en Windows. Las pruebas sin
 integración usan dobles de MongoDB. Las pruebas marcadas `integration` necesitan un
 MongoDB accesible por `MONGODB_TEST_URI`; crean y eliminan bases temporales propias:
 
 ```bash
-python -m pytest -q
+uv run --locked pytest -q
 ```
 
 Las pruebas usan una credencial ficticia propia, sin leer secretos reales. Para
@@ -263,5 +266,80 @@ CPU, memoria y réplicas. Esta prueba no reemplaza el benchmark del Extractor.
 
 - [Resultado de integración aprobado](integration/current/validation.md).
 - [Validación y carga de Documents](docs/validation.md).
+- [Resumen del escaneo de seguridad de la imagen](docs/security-audit.json).
 - [Ejecución histórica de integración](integration/historical/validation.md).
 - [Intentos de integración previos](integration/compatibility/validation.md).
+
+## Dependencias y contenedor
+
+`pyproject.toml` declara las dependencias directas; `uv.lock` fija la resolución
+completa. `uv sync --locked` falla si el manifiesto y el bloqueo no coinciden.
+Las dependencias de pruebas están en el grupo `dev`; Docker instala solo producción
+con `uv sync --locked --no-dev`. `requirements.txt` es una exportación de producción
+con hashes para auditoría y compatibilidad, no se edita manualmente:
+
+```bash
+uv lock
+uv export --locked --no-dev --no-emit-project -o requirements.txt
+```
+
+La construcción tiene una etapa con uv y una etapa de ejecución sin uv, pip ni pytest.
+Las imágenes base están fijadas por digest; deben actualizarse periódicamente y
+volver a auditarse. El código y el entorno pertenecen a root y el proceso usa el
+UID/GID 10001 sin privilegios. Compose configura raíz de solo lectura, eliminación
+de capacidades, prohibición de adquirir privilegios y un `/tmp` temporal limitado.
+El secreto se recibe en ejecución y no se copia a la imagen. MongoDB necesita
+escritura en su volumen; estas restricciones se aplican a Documents.
+
+## Patrones, resiliencia y observabilidad
+
+- **Capas y repositorio:** rutas → servicio → interfaz del dominio → adaptador MongoDB.
+- **Deduplicación:** índice único por checksum y recuperación del documento existente.
+- **Control de saturación:** admisión acotada por proceso y pool de conexiones limitado.
+  El valor inicial 16 evita acumular trabajo sin límite y coincide con el pool
+  predeterminado; no es una capacidad máxima demostrada. Ajustarlo midiendo p95,
+  errores, CPU y memoria bajo carga representativa. Readiness comparte ese cupo;
+  liveness permanece independiente de MongoDB y de la saturación.
+- **Timeouts:** presupuesto de MongoDB de 1500 ms por operación. Los consumidores
+  deben considerar también el resto del procesamiento y su propio plazo total.
+- **Reintentos:** el Compose declara un middleware de Traefik de tres intentos.
+  Su efectividad depende del proxy desplegado. `Retry-After` es una indicación al
+  consumidor; no ejecuta un reintento. No hay un bucle de retry propio ni un circuit
+  breaker explícito en esta aplicación. Los posibles reintentos del driver dependen
+  de la topología y su configuración; MongoDB standalone no equivale a un replica set.
+  Acordar presupuestos y operaciones reintentables para evitar amplificar carga.
+- **Descubrimiento:** este Compose usa DNS de Docker (`documents`, `mongodb`) y
+  etiquetas de Traefik. No registra ni consulta Consul. Si el equipo adopta Consul,
+  infraestructura debe definir registro, health checks y resolución del consumidor;
+  no se presenta como una integración implementada en este repositorio.
+- **Factor XI:** logs como eventos a stdout, con método, ruta, estado, duración y
+  correlación; no se registran cuerpos ni tokens. La recolección, retención y
+  consulta centralizada pertenecen a infraestructura. No hay historial persistente
+  de auditoría ni exportación de métricas Prometheus o trazas distribuidas; instalar
+  dependencias de telemetría no demuestra que estén instrumentadas.
+
+Prometheus/Grafana y la integración Consul se acuerdan con infraestructura. Si se
+requiere scraping, primero se define el contrato de métricas del servicio y luego
+se implementa y prueba; no se considera cubierto por los endpoints de salud.
+
+## Validación automática
+
+`.github/workflows/ci.yml` ejecuta en push y pull request las pruebas con MongoDB
+7 temporal, verifica el bloqueo y la exportación de dependencias, audita paquetes
+de producción y construye la imagen. Trivy rechaza vulnerabilidades altas o críticas con arreglo
+disponible; los avisos sin arreglo deben revisarse aparte. También comprueba usuario sin privilegios y
+la ausencia de pytest en ejecución. La ejecución remota solo existe después de
+subir estos archivos; las validaciones locales se registran en `docs/validation.md`.
+
+Para repetir la comprobación HTTP de la imagen construida sin alterar el despliegue:
+
+```bash
+docker build -t pdf-document-service-hardened:local .
+python3 scripts/validate_container.py --image pdf-document-service-hardened:local
+```
+
+El script crea MongoDB y Documents con nombres y red temporales, publica HTTP solo
+en localhost y retira sus contenedores y red al finalizar. Verifica CRUD, duplicados,
+autenticación, ejecución restringida, caída y recuperación de la base y rechazo de
+arranque sin secreto. También se ejecuta en CI; no sustituye la integración con la
+API consumidora, Extractor, Consul ni el proxy compartido.

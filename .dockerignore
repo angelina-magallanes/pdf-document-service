@@ -6,3 +6,13 @@ __pycache__/
 .pytest_cache/
 tests/
 .integration/
+.github/
+docs/
+integration/
+scripts/
+*.egg-info/
+.env.*
+!.env.example
+.aws/
+.codex/
+.agents/

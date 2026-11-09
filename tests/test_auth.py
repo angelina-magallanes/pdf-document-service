@@ -5,13 +5,14 @@ import pytest
 from fastapi.testclient import TestClient
 
 import app.main as api
+from app import dependencies
 
 
 @pytest.fixture
 def storage(monkeypatch):
     collection, mongo = MagicMock(), MagicMock()
-    monkeypatch.setattr(api, "documents", collection)
-    monkeypatch.setattr(api, "client", mongo)
+    monkeypatch.setattr(dependencies, "documents", collection)
+    monkeypatch.setattr(dependencies, "client", mongo)
     return collection, mongo
 
 
@@ -108,7 +109,7 @@ def test_auth_se_comprueba_antes_del_limite_de_concurrencia(storage, monkeypatch
 
     limiter = BoundedSemaphore(1)
     limiter.acquire()
-    monkeypatch.setattr(api, "admission", limiter)
+    monkeypatch.setattr(dependencies, "admission", limiter)
     with TestClient(api.app) as client:
         assert client.get("/documents").status_code == 401
         assert client.get("/health/live").status_code == 200

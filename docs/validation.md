@@ -1,5 +1,70 @@
 # Validación de Document Service
 
+## Revisión de estructura, dependencias y contenedor (09/11/2026)
+
+Se migró a `pyproject.toml` y `uv.lock`, con dependencias de producción y pruebas
+separadas. `requirements.txt` queda como exportación de producción con hashes.
+La instalación limpia con `uv sync --locked` aprobó **139 pruebas**, incluidas
+**5 con MongoDB 7.0.45 temporal**. Se observa un aviso de deprecación del cliente
+httpx de Starlette en pruebas; no se silenció ni se presenta como fallo funcional.
+
+`main.py` queda en 38 líneas de composición. Las rutas se encuentran en
+`routes.py`, la autenticación/correlación/admisión en `middleware.py` y los recursos
+y ciclo de vida en `dependencies.py`. Se conservan dominio, servicio, repositorio,
+schemas, conexión y errores en módulos separados. Se adaptaron las fixtures para
+probar los mismos contratos sobre los módulos nuevos.
+
+Se construyó `pdf-document-service-hardened:local` con uv 0.13.7 y Python 3.14.10.
+Las bases están fijadas por digest y la etapa final no incluye uv, pip, ensurepip
+ni pytest. El proceso usa UID/GID 10001; código y entorno pertenecen a root.
+El Compose restringe Documents con raíz de solo lectura, `cap_drop: ALL`,
+`no-new-privileges` y `/tmp` temporal limitado. No se aplican esas restricciones
+al almacenamiento de MongoDB.
+
+`python3 scripts/validate_container.py` aprobó sobre la imagen final: salud pública,
+401 sin token o con token incorrecto; creación 201, duplicado 200, consulta por ID y
+checksum, listado, renombrado y eliminación 204 autenticados. También comprobó
+usuario sin privilegios y código no escribible; liveness 200 y readiness/lectura
+503 con MongoDB detenido; recuperación y persistencia al reiniciar MongoDB; y
+rechazo de arranque sin secreto. Los contenedores, volúmenes de datos y red de
+esta prueba se retiraron. El script queda disponible para repetir la comprobación.
+
+Los Compose base y de desarrollo validaron con una credencial ficticia y la
+configuración fue rechazada al faltar `DOCUMENTS_API_TOKEN`. El YAML de CI y
+`git diff --check` también validaron. Se agregó CI para push y pull request con
+pruebas MongoDB, bloqueo/exportación, auditoría de dependencias, construcción,
+prueba HTTP del contenedor y escaneo de vulnerabilidades de imagen. Las acciones
+y las imágenes de construcción/escaneo se fijan por commit o digest. **No se ha
+observado una ejecución remota de este workflow: los cambios siguen locales.**
+
+La auditoría `pip-audit` de las **16 dependencias de producción** no encontró
+vulnerabilidades conocidas. El escaneo de imagen y sus riesgos residuales se
+registran a continuación; este resultado no implica ausencia de vulnerabilidades.
+
+Trivy 0.76.2 escaneó la imagen final (ID y detalle en
+[`security-audit.json`](security-audit.json)). No detectó vulnerabilidades en
+paquetes Python. En Debian 12.15 registró **92 hallazgos bajos, 105 medios,
+40 altos y 2 críticos**, sin versión corregida publicada en esos hallazgos.
+Son hallazgos por paquete, no necesariamente CVE distintos. No se declara la
+imagen libre de vulnerabilidades ni se suprimen avisos mediante excepciones.
+El control de CI falla ante hallazgos altos/críticos con corrección disponible;
+es necesario revisar también los avisos sin corrección, actualizar periódicamente
+la base y reevaluar su exposición antes de desplegar. El informe inicial detectó
+además avisos en paquetes internos de pip; se retiraron pip y ensurepip y se
+repitió el escaneo sobre la imagen final. La base temporal de Trivy se retiró.
+
+El README detalla los patrones implementados y los límites de la evidencia:
+DNS de Docker/Traefik, sin integración Consul; logs a stdout con correlación,
+sin métricas Prometheus ni trazas distribuidas; timeout y admisión acotada, sin
+circuit breaker propio. El valor de concurrencia 16 es configurable y requiere
+medición representativa para ajustar capacidad. El retry declarado en Traefik
+requiere comprobarse en el proxy realmente desplegado.
+
+Esta revisión no vuelve a validar la integración completa API–Extractor–Documents.
+Sigue siendo necesario coordinar credenciales, despliegue, descubrimiento y
+observabilidad con los responsables de los otros repositorios y fijar sus nuevas
+revisiones antes de repetir ese escenario.
+
 ## Autenticación Bearer (09/11/2026)
 
 El código de desarrollo ahora exige `DOCUMENTS_API_TOKEN` al iniciar y una
