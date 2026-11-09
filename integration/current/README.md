@@ -37,7 +37,7 @@ commit completos; no se ejecutan automáticamente cambios locales de los servici
 
 ## Alcance
 
-El manifiesto fija API `e191097`, Extractor `6720c32` y Documents `b4fd3df`, con
+El manifiesto fija API `e191097`, Extractor `6720c32` y Documents `7469779`, con
 Bearer. El overlay `auth.compose.yaml` configura el mismo secreto temporal en API,
 Documents y cliente. El ejecutor no usa tu token real ni lo escribe en los informes.
 La comprobación de autenticación verifica salud pública, 401 sin token y con token

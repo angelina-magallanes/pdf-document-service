@@ -1,5 +1,33 @@
 # Validación de Document Service
 
+## Seguimiento del cierre de entrega (09/11/2026)
+
+El commit publicado `7469779965bc74362e8412668565e6ebc4777d59` se fijó en
+`integration/current/versions.json`. El workflow remoto
+[42723716346](https://github.com/angelina-magallanes/pdf-document-service/actions/runs/42723716346)
+falló durante la colección de pruebas con `ModuleNotFoundError` para `app` y
+`scripts`; las etapas posteriores no se ejecutaron. Se corrigió la invocación a
+`uv run --locked python -m pytest -q` en el commit local `54725f5`.
+La suite local ejecutada con `.venv/bin/python -m pytest -q` aprobó **153 pruebas**,
+con el aviso de deprecación de Starlette. El push de la corrección falló por falta
+de credenciales HTTPS de GitHub; no hay aprobación remota de esta corrección.
+
+Se intentó repetir la integración sin `--local-documents`, ejecución
+`20261109204952-9eba431f`. La construcción y el arranque terminaron, pero la
+comprobación de autenticación falló con `httpx.ReadTimeout`. Se observó presión
+de memoria y swap en la VM; no se aisló la causa del timeout. Este intento no
+acredita integración aprobada del commit publicado. Los registros completos están
+en `.integration/stack/runs/20261109204952-9eba431f/` (ignorado por Git).
+La limpieza terminó con `cleanup_ok=true`; se retiraron los contenedores y la red
+temporales. Se conserva el resultado aprobado anterior en
+`integration/current/result.json`.
+
+No se identificó acceso al despliegue compartido. Quedan pendientes su prueba de
+retiro de réplicas bajo tráfico, la instalación/verificación del monitoreo y el
+canal de notificación. La configuración local encontrada no permite acreditar
+esas condiciones del entorno compartido.
+
+
 ## Límites, observabilidad e integración autenticada (09/11/2026)
 
 Se completaron los límites incrementales del cuerpo HTTP (4 MiB, 15 s), el

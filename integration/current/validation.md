@@ -1,5 +1,13 @@
 # Resultado de integración aislada
 
+## Intento con commit publicado (09/11/2026)
+
+El manifiesto actual fija Documents `7469779965bc74362e8412668565e6ebc4777d59`.
+La ejecución `20261109204952-9eba431f`, sin `--local-documents`, falló con
+`httpx.ReadTimeout` durante autenticación. No aprobó el flujo completo.
+Ver [seguimiento del cierre](../../docs/validation.md). El resultado JSON
+versionado sigue correspondiendo a la ejecución aprobada anterior.
+
 ## Integración con Bearer y límites de Documents (09/11/2026)
 
 Ejecución `20261109195805-7ad8af59`: **passed=true, cleanup_ok=true**.
@@ -16,9 +24,9 @@ El secreto fue aleatorio y temporal; no se guardó en el informe ni en Git.
 Se retiraron los recursos temporales. No valida el despliegue compartido ni el
 benchmark del Extractor con PDFs oficiales.
 
-Para repetir el árbol actual: `python3 scripts/integration_stack.py --local-documents`.
-Sin esa opción se reconstruyen los commits del manifiesto, incluido Documents
-`b4fd3df`, no los cambios aún sin commit de esta revisión.
+Comando usado para probar el árbol local: `python3 scripts/integration_stack.py --local-documents`.
+Sin esa opción se reconstruyen los commits del manifiesto actual; consultar el
+intento más reciente al inicio de este archivo.
 
 ## Antecedente anterior a Bearer
 
