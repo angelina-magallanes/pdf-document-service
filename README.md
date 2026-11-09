@@ -65,11 +65,67 @@ El límite de MongoDB se aplica al Markdown y sus metadatos; es distinto del lí
 sobre el PDF de entrada. El servicio propaga `X-Request-ID` y `X-Audit-Id` válidos,
 genera un request ID si falta y registra solicitudes en stdout sin incluir sus cuerpos.
 
+## Autenticación entre servicios
+
+Todas las operaciones de documentos requieren una credencial compartida:
+
+```http
+Authorization: Bearer <DOCUMENTS_API_TOKEN>
+```
+
+`DOCUMENTS_API_TOKEN` es obligatorio y no tiene valor predeterminado. Generar un
+secreto aleatorio y guardarlo en el `.env` local o en el gestor de secretos del
+despliegue, nunca en Git:
+
+```bash
+python3 -c "import secrets; print(secrets.token_urlsafe(32))"
+```
+
+El valor debe tener al menos 32 caracteres sin espacios; se admiten los caracteres
+ASCII habituales de tokens Bearer. Al iniciar se valida antes de contactar a
+MongoDB. Si falta o es inválido, el servicio no arranca. Cambiar la variable exige
+reiniciar Documents; coordinar la misma actualización en sus consumidores.
+
+Sin credencial o con una credencial incorrecta, la respuesta es **401** con
+`WWW-Authenticate: Bearer` y `application/problem+json`. La comprobación ocurre
+antes de validar el cuerpo o acceder a MongoDB. La comparación del secreto usa
+`compare_digest`; el token no se incluye en logs ni en respuestas.
+
+`/health`, `/health/live` y `/health/ready` permanecen públicas para las sondas.
+También son públicas `/docs`, `/redoc` y `/openapi.json`, que muestran el contrato,
+no los documentos almacenados. En Swagger usar **Authorize**, ingresar solamente
+el valor del token y luego ejecutar las operaciones.
+
+### Configuración de la API consumidora
+
+La API orquestadora debe obtener el mismo secreto desde su propia configuración
+y adjuntar `Authorization: Bearer ...` en **todas** las llamadas a `/documents`,
+incluidas las búsquedas por checksum. Ejemplo con un cliente HTTP:
+
+```python
+headers = {"Authorization": f"Bearer {os.environ['DOCUMENTS_API_TOKEN']}"}
+response = await client.get(
+    f"{documents_url}/documents/by-checksum/{checksum}", headers=headers,
+)
+```
+
+Este ejemplo se configura en el repositorio consumidor; los nombres de variables
+deben acordarse allí. Infraestructura también debe pasar `DOCUMENTS_API_TOKEN`
+al contenedor de Documents si usa su propio Compose. Coordinar ambos cambios
+antes de desplegar esta revisión: una API que no envíe la credencial recibirá 401.
+
+Esta autenticación identifica a los consumidores que conocen el secreto; no
+implementa usuarios, roles ni permisos por documento. Transportar el token por
+HTTPS si las llamadas atraviesan redes no confiables. No publicar MongoDB sin
+los controles propios de la base. El servicio mantiene el límite BSON existente;
+no incorpora en esta revisión un límite HTTP adicional del cuerpo.
+
 ## Arquitectura
 
 | Archivo | Responsabilidad |
 | --- | --- |
 | `app/main.py` | Rutas HTTP, correlación y límite de solicitudes. |
+| `app/auth.py` | Validación del secreto y autenticación Bearer. |
 | `app/schemas.py` | Modelos de entrada y salida de la API. |
 | `app/domain.py` | Modelo de documento, interfaz de repositorio y errores del dominio. |
 | `app/service.py` | Lógica de creación y recuperación de duplicados. |
@@ -94,6 +150,7 @@ Las variables tienen estos valores predeterminados:
 
 | Variable | Valor | Uso |
 | --- | --- | --- |
+| `DOCUMENTS_API_TOKEN` | Sin valor por defecto; obligatorio | Secreto compartido de acceso a los documentos. |
 | `MONGODB_URI` | `mongodb://mongodb:27017` en Compose | Dirección de MongoDB. Fuera de Compose: `mongodb://127.0.0.1:27017`. |
 | `MONGODB_DATABASE` | `pdf_extractext` | Base donde se almacenan los documentos. |
 | `MONGODB_TIMEOUT_MS` | `1500` | Presupuesto por operación y límites de conexión, selección y socket. |
@@ -117,6 +174,7 @@ Requiere Docker Compose y la red externa compartida:
 
 ```bash
 cp .env.example .env
+# Completar DOCUMENTS_API_TOKEN en .env con el secreto generado.
 # Crear solo si todavía no existe:
 docker network create pdf-network
 docker compose up -d --build
@@ -160,6 +218,10 @@ MongoDB accesible por `MONGODB_TEST_URI`; crean y eliminan bases temporales prop
 python -m pytest -q
 ```
 
+Las pruebas usan una credencial ficticia propia, sin leer secretos reales. Para
+iniciar Uvicorn fuera de Compose, exportar `DOCUMENTS_API_TOKEN` en la terminal:
+Python no carga automáticamente el archivo `.env`.
+
 ### Integración de servicios
 
 El escenario reproducible ejecuta API, Extractor, Documents y MongoDB con commits
@@ -176,10 +238,18 @@ los contenedores, red y volúmenes temporales. Los resultados quedan en
 [guía de integración](integration/current/README.md) para versiones, limpieza y
 alcance. La ejecución registrada aprobó el flujo completo con el Extractor `6720c32`
 y Documents `b851105`; no valida el proxy compartido ni pruebas de dos réplicas.
+Esa revisión es anterior a la autenticación Bearer: el comando reproduce el
+contrato anterior y no verifica los cambios locales de seguridad. Para probar
+la nueva revisión de punta a punta se necesita primero adaptar el consumidor y
+la configuración del stack, fijar sus nuevos commits y repetir el escenario.
 
 ### Carga sencilla
 
 Con k6 y una instancia que use una **base de pruebas aislada**:
+
+Exportar previamente `DOCUMENTS_API_TOKEN` con el secreto de esa instancia. k6 lo
+lee del entorno y agrega la cabecera Authorization; falla antes de generar carga
+si falta la variable.
 
 ```bash
 k6 run -e RUN_ID=prueba-001 -e BASE_URL=http://documents.universidad.localhost tests/stress/documents.js

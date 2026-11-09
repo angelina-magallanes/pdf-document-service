@@ -12,7 +12,7 @@ pytestmark = pytest.mark.integration
 
 
 @pytest.fixture
-def client(monkeypatch):
+def client(monkeypatch, api_token):
     mongo = MongoClient(
         os.getenv("MONGODB_TEST_URI", "mongodb://127.0.0.1:27017"),
         serverSelectionTimeoutMS=5000,
@@ -29,7 +29,7 @@ def client(monkeypatch):
         )
         monkeypatch.setattr(api, "client", app_mongo)
         monkeypatch.setattr(api, "documents", collection)
-        with TestClient(api.app) as http_client:
+        with TestClient(api.app, headers={"Authorization": f"Bearer {api_token}"}) as http_client:
             yield http_client
     finally:
         mongo.drop_database(database_name)

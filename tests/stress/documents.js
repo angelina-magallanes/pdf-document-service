@@ -16,12 +16,15 @@ export const options = {
 const base = (__ENV.BASE_URL || 'http://documents.universidad.localhost').replace(/\/$/, '');
 const runId = __ENV.RUN_ID;
 if (!runId) throw new Error('Definir RUN_ID único para esta ejecución');
+const token = __ENV.DOCUMENTS_API_TOKEN;
+if (!token) throw new Error('Definir DOCUMENTS_API_TOKEN para esta ejecución');
 
 export default function () {
   const checksum = sha256(`${runId}-${__VU}-${__ITER}`, 'hex');
   const params = {
     headers: {
       'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
       'X-Request-ID': `load-${runId}-${__VU}-${__ITER}`,
     },
     timeout: '5s',

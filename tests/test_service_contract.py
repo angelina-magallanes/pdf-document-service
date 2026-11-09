@@ -20,9 +20,9 @@ def storage(monkeypatch):
 
 
 @pytest.fixture
-def client(storage):
+def client(storage, api_token):
     # El ciclo de arranque se prueba aparte; estas pruebas no necesitan MongoDB.
-    http = TestClient(api.app)
+    http = TestClient(api.app, headers={"Authorization": f"Bearer {api_token}"})
     yield http
     http.close()
 

@@ -8,12 +8,13 @@ from threading import BoundedSemaphore
 from time import perf_counter
 from uuid import uuid4
 
-from fastapi import FastAPI, Path, Query, Request, Response
+from fastapi import Depends, FastAPI, Path, Query, Request, Response
 from fastapi.concurrency import run_in_threadpool
 from fastapi.exceptions import RequestValidationError
 from pymongo.errors import DocumentTooLarge, PyMongoError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+from app.auth import PUBLIC_PATHS, authorized, bearer_scheme, load_api_token
 from app.database import client, documents, max_inflight
 from app.domain import Document, DocumentConflict, DocumentNotFound, InvalidDocumentId
 from app.errors import database_error, document_too_large, http_error, problem_response, problem_spec, validation_error
@@ -39,9 +40,11 @@ def initialize_database():
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     try:
+        app.state.api_token = load_api_token()
         await run_in_threadpool(initialize_database)
         yield
     finally:
+        app.state.api_token = None
         await run_in_threadpool(client.close)
 
 
@@ -49,8 +52,10 @@ app = FastAPI(
     title="Servicio de persistencia de documentos",
     description="MongoDB, CRUD y deduplicación por SHA-256 del PDF original.",
     version="1.0.0", lifespan=lifespan,
-    responses={422: problem_spec("Solicitud inválida"), 503: problem_spec("Base de datos no disponible o servicio saturado")},
+    responses={401: problem_spec("Credenciales inválidas o ausentes"),
+               422: problem_spec("Solicitud inválida"), 503: problem_spec("Base de datos no disponible o servicio saturado")},
 )
+app.state.api_token = None
 app.add_exception_handler(StarletteHTTPException, http_error)
 app.add_exception_handler(RequestValidationError, validation_error)
 app.add_exception_handler(PyMongoError, database_error)
@@ -91,7 +96,17 @@ async def trace_request(request: Request, call_next):
     request.state.request_id = request_id if TRACE_ID.fullmatch(request_id) else uuid4().hex
     request.state.audit_id = audit_id if TRACE_ID.fullmatch(audit_id) else None
     start = perf_counter()
-    response = await admitted_request(request, call_next)
+    if request.url.path in PUBLIC_PATHS:
+        response = await admitted_request(request, call_next)
+    elif not request.app.state.api_token:
+        response = problem_response(request, 503, "Servicio no configurado")
+    elif not authorized(request.headers, request.app.state.api_token):
+        response = problem_response(
+            request, 401, "Credenciales inválidas o ausentes",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    else:
+        response = await admitted_request(request, call_next)
     response.headers["X-Request-ID"] = request.state.request_id
     if request.state.audit_id:
         response.headers["X-Audit-Id"] = request.state.audit_id
@@ -118,6 +133,7 @@ def health_ready():
 
 @app.post(
     "/documents", response_model=DocumentResponse, status_code=201, tags=["Documents"],
+    dependencies=[Depends(bearer_scheme)],
     responses={200: {"model": DocumentResponse, "description": "Checksum ya almacenado"},
                413: problem_spec("Documento demasiado grande para MongoDB"),
                409: problem_spec("Conflicto concurrente; volver a consultar por checksum")},
@@ -131,29 +147,33 @@ def create_document(payload: DocumentCreate, response: Response):
 
 
 @app.get("/documents/by-checksum/{checksum}", response_model=DocumentResponse,
+         dependencies=[Depends(bearer_scheme)],
          tags=["Documents"], responses={404: problem_spec("Documento no encontrado")})
 def get_document_by_checksum(checksum: str = Path(pattern=r"^[0-9a-fA-F]{64}$")):
     return asdict(get_service().get_by_checksum(checksum))
 
 
 @app.get("/documents/{document_id}", response_model=DocumentResponse,
+         dependencies=[Depends(bearer_scheme)],
          tags=["Documents"], responses={404: problem_spec("Documento no encontrado")})
 def get_document_by_id(document_id: str):
     return asdict(get_service().get_by_id(document_id))
 
 
-@app.get("/documents", response_model=list[DocumentResponse], tags=["Documents"])
+@app.get("/documents", response_model=list[DocumentResponse], tags=["Documents"], dependencies=[Depends(bearer_scheme)])
 def list_documents(skip: int = Query(default=0, ge=0), limit: int = Query(default=20, ge=1, le=100)):
     return [asdict(document) for document in get_service().list(skip, limit)]
 
 
 @app.patch("/documents/{document_id}", response_model=DocumentResponse,
+           dependencies=[Depends(bearer_scheme)],
            tags=["Documents"], responses={404: problem_spec("Documento no encontrado")})
 def update_document(document_id: str, payload: DocumentUpdate):
     return asdict(get_service().rename(document_id, payload.filename))
 
 
 @app.delete("/documents/{document_id}", status_code=204,
+            dependencies=[Depends(bearer_scheme)],
             tags=["Documents"], responses={404: problem_spec("Documento no encontrado")})
 def delete_document(document_id: str):
     get_service().delete(document_id)

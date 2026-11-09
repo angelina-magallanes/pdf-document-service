@@ -7,6 +7,7 @@ services:
       - pdf-network
     environment:
       PORT: ${PORT:-8000}
+      DOCUMENTS_API_TOKEN: ${DOCUMENTS_API_TOKEN:?Configurar DOCUMENTS_API_TOKEN en .env}
       MONGODB_URI: ${MONGODB_URI:-mongodb://mongodb:27017}
       MONGODB_DATABASE: ${MONGODB_DATABASE:-pdf_extractext}
       MONGODB_TIMEOUT_MS: ${MONGODB_TIMEOUT_MS:-1500}

@@ -1,5 +1,30 @@
 # Validación de Document Service
 
+## Autenticación Bearer (09/11/2026)
+
+El código de desarrollo ahora exige `DOCUMENTS_API_TOKEN` al iniciar y una
+cabecera `Authorization: Bearer ...` para acceder a los documentos. Las sondas
+de salud y la documentación OpenAPI siguen públicas. Se verificaron **134
+pruebas sin servicios externos** y **5 pruebas con una instancia MongoDB 7.0.45
+temporal exclusiva**, retirada al finalizar. Se cubren rechazo de credenciales
+ausentes, incorrectas y duplicadas; rechazo previo al procesamiento del JSON y
+al acceso a MongoDB; seguimiento de los errores; arranque sin secreto; OpenAPI;
+y continuidad del CRUD autenticado y la deduplicación.
+
+También se construyó `pdf-document-service-security:local` y se probó por HTTP
+real con MongoDB y red interna temporales: health público 200; acceso sin token
+o con token incorrecto 401; creación 201, duplicado 200 y eliminación 204 con
+token válido. La imagen rechazó el arranque sin secreto. Los Compose base y de
+desarrollo validaron con secreto y la configuración fue rechazada sin él. Los
+recursos temporales se retiraron sin reemplazar el despliegue existente.
+
+Esta revisión cambia el requisito de acceso del consumidor. La integración
+aprobada con Documents `b851105` sigue siendo evidencia de esa revisión anterior,
+no una validación del nuevo requisito de autenticación. Antes de desplegar la
+revisión protegida, la API debe enviar la credencial y el Compose de
+infraestructura debe configurar el mismo secreto en Documents. Después debe
+repetirse la integración completa con las nuevas revisiones.
+
 ## Seguimiento del acuerdo con infraestructura (07/11/2026)
 
 El entorno compartido informó MongoDB 7 y la base `pdf_extractext_integration` para integración,

@@ -37,6 +37,13 @@ commit completos; no se ejecutan automáticamente cambios locales de los servici
 
 ## Alcance
 
+El manifiesto fija Documents `b851105`, anterior a la autenticación Bearer. Esta
+prueba sigue reproduciendo esa revisión y no certifica la autenticación del
+código de desarrollo posterior. Para desplegar la revisión protegida, adaptar
+primero la API consumidora y el Compose para enviar/configurar el secreto,
+actualizar los commits fijados y repetir el flujo. No desactivar la autenticación
+para conservar compatibilidad con el consumidor anterior.
+
 Se verifican PDF nuevo y repetido, checksum y contenido, concurrencia, entradas
 inválidas, ruta por Traefik aislado, persistencia tras reiniciar Documents y fallas
 ante la caída de Extractor y Documents. La [ejecución registrada](validation.md)
