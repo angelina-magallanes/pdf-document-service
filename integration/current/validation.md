@@ -1,7 +1,31 @@
 # Resultado de integración aislada
 
+## Integración con Bearer y límites de Documents (09/11/2026)
+
+Ejecución `20261109195805-7ad8af59`: **passed=true, cleanup_ok=true**.
+API `e191097bba601efffe729b811ccbf872b483318b`, Extractor
+`6720c32f21d404231da131090b9f094eaa4728f6` y Documents construido desde el árbol
+local sobre `b4fd3df`, con sus hashes registrados. No es una prueba del commit
+base sin modificaciones. El [resultado completo](result.json) permite comprobar
+los archivos exactos probados.
+
+Pasaron autenticación (401 sin token/incorrecto), salud pública, nuevo PDF y
+repetido con el mismo ID/checksum, multipart, concurrencia, PDFs inválidos, ruta
+por Traefik aislado, persistencia después del reinicio y caída de cada dependencia.
+El secreto fue aleatorio y temporal; no se guardó en el informe ni en Git.
+Se retiraron los recursos temporales. No valida el despliegue compartido ni el
+benchmark del Extractor con PDFs oficiales.
+
+Para repetir el árbol actual: `python3 scripts/integration_stack.py --local-documents`.
+Sin esa opción se reconstruyen los commits del manifiesto, incluido Documents
+`b4fd3df`, no los cambios aún sin commit de esta revisión.
+
+## Antecedente anterior a Bearer
+
+
 El 08/11/2026 se aprobó el flujo real API → Extractor → Documents → MongoDB en un
-entorno temporal. El manifiesto reproducible está en [versions.json](versions.json).
+entorno temporal. Los commits de esa prueba histórica se detallan a continuación; el manifiesto
+actual se actualizó para Bearer y ya no representa esa ejecución.
 
 | Servicio | Commit |
 | --- | --- |

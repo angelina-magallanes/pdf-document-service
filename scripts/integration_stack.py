@@ -1,6 +1,8 @@
 """Ejecuta la integración aislada con un manifiesto de commits fijados."""
 
 import argparse
+import hashlib
+import secrets
 from datetime import datetime, timezone
 import json
 import os
@@ -70,7 +72,7 @@ def prepare_source(path, version):
         raise ValueError(f"Commit inesperado en {path}: {actual}; no se cambia esa copia")
 
 
-def environment(run_id, paths):
+def environment(run_id, paths, *, authenticated=False):
     if not RUN_ID.fullmatch(run_id):
         raise ValueError("Identificador de ejecución inválido")
     run_dir = CACHE / "runs" / run_id
@@ -88,6 +90,12 @@ def environment(run_id, paths):
     env = os.environ.copy()
     env.pop("COMPOSE_PROFILES", None)
     env.update(values)
+    if authenticated:
+        values["authenticated"] = True
+        env["DOCUMENTS_API_TOKEN"] = secrets.token_urlsafe(32)
+        env["DOCUMENTS_TEST_HARNESS"] = str(ROOT / "integration" / "current")
+    else:
+        env.pop("DOCUMENTS_API_TOKEN", None)
     return env, values, run_dir
 
 
@@ -131,19 +139,33 @@ def validate_stack(config, values):
 
 def compose_command(paths, values):
     harness = paths["api"] / "integration" / "real-stack"
-    return ["docker", "compose", "--profile", "client", "-p", values["COMPOSE_PROJECT_NAME"],
-            "--project-directory", str(harness), "-f", str(harness / "compose.yaml")]
+    arguments = ["docker", "compose", "--profile", "client", "-p", values["COMPOSE_PROJECT_NAME"],
+                 "--project-directory", str(harness), "-f", str(harness / "compose.yaml")]
+    if values.get("authenticated"):
+        arguments += ["-f", str(ROOT / "integration" / "current" / "auth.compose.yaml")]
+    return arguments
 
 
 def render_stack(compose, env, values, run_dir):
-    output = command(compose + ["config", "--format", "json"], env=env, log=run_dir / "compose-config.json")
-    validate_stack(json.loads(output), values)
+    output = command(compose + ["config", "--format", "json"], env=env)
+    config = json.loads(output)
+    validate_stack(config, values)
+    if values.get("authenticated"):
+        for name in ("documents", "api", "client"):
+            configured = config["services"][name]["environment"]
+            if configured.get("DOCUMENTS_API_TOKEN") != env["DOCUMENTS_API_TOKEN"]:
+                raise ValueError("Los consumidores deben compartir la credencial temporal")
+            configured["DOCUMENTS_API_TOKEN"] = "REDACTED"
+    (run_dir / "compose-config.json").write_text(json.dumps(config, indent=2), encoding="utf-8")
 
 
 def cleanup(run_id, versions):
     paths = source_paths(versions)
-    env, values, run_dir = environment(run_id, paths)
+    run_dir = CACHE / "runs" / run_id
+    if not RUN_ID.fullmatch(run_id):
+        raise ValueError("Identificador de ejecución inválido")
     metadata = json.loads((run_dir / "versions.json").read_text(encoding="utf-8"))
+    env, values, run_dir = environment(run_id, paths, authenticated=metadata.get("authenticated", False))
     if metadata["project"] != values["COMPOSE_PROJECT_NAME"] or metadata["versions"] != versions:
         raise ValueError("La ejecución guardada no corresponde a estas versiones y proyecto")
     compose = compose_command(paths, values)
@@ -152,19 +174,23 @@ def cleanup(run_id, versions):
     print(f"Recursos temporales de {run_id} retirados.", flush=True)
 
 
-def run_integration(versions, paths):
+def run_integration(versions, paths, *, authenticated=False, local_documents=False):
     run_id = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S") + "-" + uuid.uuid4().hex[:8]
-    env, values, run_dir = environment(run_id, paths)
+    env, values, run_dir = environment(run_id, paths, authenticated=authenticated)
     run_dir.mkdir(parents=True)
     (run_dir / "versions.json").write_text(json.dumps({
         "project": values["COMPOSE_PROJECT_NAME"], "versions": versions,
-        "mongo_database": values["MONGO_DATABASE"],
+        "mongo_database": values["MONGO_DATABASE"], "authenticated": authenticated,
     }, indent=2), encoding="utf-8")
     compose = compose_command(paths, values)
     harness = paths["api"] / "integration" / "real-stack"
     summary = {"run_id": run_id, "project": values["COMPOSE_PROJECT_NAME"],
                "versions": versions, "mongo_database": values["MONGO_DATABASE"],
-               "checks": [], "passed": False, "cleanup_ok": False}
+               "checks": [], "passed": False, "cleanup_ok": False,
+               "authenticated": authenticated, "local_documents": local_documents}
+    if local_documents:
+        files = [ROOT / "Dockerfile", ROOT / "pyproject.toml", ROOT / "uv.lock", *sorted((ROOT / "app").glob("*.py"))]
+        summary["documents_source_sha256"] = {str(p.relative_to(ROOT)): hashlib.sha256(p.read_bytes()).hexdigest() for p in files}
     started = False
 
     def step(name, arguments):
@@ -191,6 +217,8 @@ def run_integration(versions, paths):
         step("construir-imagenes", compose + ["build", "api", "extractor", "documents"])
         started = True
         step("iniciar-stack", compose + ["up", "-d", "--no-build", "--wait", "--wait-timeout", "240", "mongodb", "documents", "extractor", "api", "traefik"])
+        if authenticated:
+            probe("autenticacion", "auth_check.py")
         probe("flujo-completo")
         step("reiniciar-documents", compose + ["restart", "documents"])
         step("esperar-documents", compose + ["up", "-d", "--no-build", "--wait", "--wait-timeout", "120", "documents"])
@@ -228,6 +256,7 @@ def run_integration(versions, paths):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--local-documents", action="store_true", help="Construir Documents desde este árbol y registrar hashes; no es una revisión publicada")
     parser.add_argument("--versions", type=Path, help="Manifiesto alternativo de commits; por defecto usa el manifiesto de integración actual")
     parser.add_argument("--prepare-only", action="store_true", help="Solo preparar las tres copias fijadas")
     parser.add_argument("--cleanup", metavar="RUN_ID", help="Retirar los recursos de una ejecución interrumpida")
@@ -245,11 +274,14 @@ def main():
     paths = source_paths(versions)
     for name, version in versions.items():
         print(f"Preparando {name}: {version['commit'][:7]}", flush=True)
-        prepare_source(paths[name], version)
+        if name == "documents" and args.local_documents:
+            paths[name] = ROOT
+        else:
+            prepare_source(paths[name], version)
     if args.prepare_only:
         print("Copias listas. El árbol de trabajo actual de Documents se conserva.", flush=True)
         return
-    run_integration(versions, paths)
+    run_integration(versions, paths, authenticated=args.versions is None, local_documents=args.local_documents)
 
 
 if __name__ == "__main__":

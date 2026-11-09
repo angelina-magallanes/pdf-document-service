@@ -1,7 +1,7 @@
 # Integración aislada de servicios
 
 El ejecutor construye API, Extractor y Documents desde los commits fijados en
-[versions.json](versions.json). No usa el árbol de trabajo actual: prepara copias
+[versions.json](versions.json). Por defecto no usa el árbol de trabajo actual: prepara copias
 separadas y rechaza copias modificadas o con un commit diferente. Los repositorios
 originales se indican en el manifiesto para permitir su descarga reproducible.
 
@@ -37,12 +37,24 @@ commit completos; no se ejecutan automáticamente cambios locales de los servici
 
 ## Alcance
 
-El manifiesto fija Documents `b851105`, anterior a la autenticación Bearer. Esta
-prueba sigue reproduciendo esa revisión y no certifica la autenticación del
-código de desarrollo posterior. Para desplegar la revisión protegida, adaptar
-primero la API consumidora y el Compose para enviar/configurar el secreto,
-actualizar los commits fijados y repetir el flujo. No desactivar la autenticación
-para conservar compatibilidad con el consumidor anterior.
+El manifiesto fija API `e191097`, Extractor `6720c32` y Documents `b4fd3df`, con
+Bearer. El overlay `auth.compose.yaml` configura el mismo secreto temporal en API,
+Documents y cliente. El ejecutor no usa tu token real ni lo escribe en los informes.
+La comprobación de autenticación verifica salud pública, 401 sin token y con token
+incorrecto, y listado autenticado.
+
+Para construir los cambios locales de Documents sin hacer un commit:
+
+```bash
+python3 scripts/integration_stack.py --local-documents
+```
+
+Se registran hashes SHA-256 de los archivos de construcción y aplicación en
+`summary.json`; la revisión base se conserva como referencia y no se presenta
+el árbol modificado como si fuera ese commit. Tras publicar una nueva revisión,
+actualizar el commit de Documents en el manifiesto para reproducirla sin esta opción.
+Los manifiestos históricos con `--versions` conservan el escenario anterior sin
+overlay Bearer. No usar esa opción para validar la autenticación actual.
 
 Se verifican PDF nuevo y repetido, checksum y contenido, concurrencia, entradas
 inválidas, ruta por Traefik aislado, persistencia tras reiniciar Documents y fallas

@@ -1,5 +1,79 @@
 # Validación de Document Service
 
+## Límites, observabilidad e integración autenticada (09/11/2026)
+
+Se completaron los límites incrementales del cuerpo HTTP (4 MiB, 15 s), el
+presupuesto de página (8 MiB), el cierre del cursor y la retención del cupo de
+admisión durante toda la respuesta. Se preservan los campos y el formato del CRUD.
+Los nuevos 408/413 son cambios de comportamiento que deben comunicarse al consumidor.
+
+Los errores de PyMongo se traducen en el adaptador; presentación usa excepciones
+del dominio. Se exportan métricas Prometheus protegidas y de cardinalidad acotada.
+Hay plantillas de scraping/alertas/dashboard y guía operativa, sin modificar la
+infraestructura compartida. La tabla de correspondencia con los materiales está
+en [cumplimiento.md](cumplimiento.md).
+
+### Verificación realizada
+
+- **153 pruebas aprobadas**, incluidas cinco con MongoDB 7.0.45 temporal. La suite
+  sin servicios externos aprobó 148. Persiste el aviso de deprecación del cliente
+  httpx de Starlette; no afecta el resultado.
+- Imagen probada por HTTP real: CRUD, Bearer, usuario no privilegiado, raíz de
+  solo lectura, caída/recuperación de MongoDB, persistencia y arranque sin secreto.
+- Integración API–Extractor–Documents aprobada con autenticación y limpieza completa:
+  `20261109195805-7ad8af59`. [Resultado versionado](../integration/current/result.json).
+  Los hashes del código construido coinciden con el árbol auditado. Se probaron
+  PDFs sintéticos, no el conjunto oficial del benchmark.
+- Auditoría de las dependencias de producción con pip-audit: sin vulnerabilidades
+  conocidas detectadas. No se repitió aquí el escaneo del sistema operativo de la
+  imagen; el informe de seguridad previo conserva su alcance y su ID de imagen.
+- Se incorporó carga smoke aislada al workflow de CI y almacenamiento de evidencia.
+  No se observó su ejecución remota; el resultado local no demuestra aprobación remota.
+
+Un intento encontró un montaje tmpfs mal expresado en el overlay YAML; se corrigió.
+Otro intento fue interrumpido por el reinicio de la VM, después de un timeout del
+consumidor. Sus recursos se retiraron y se repitió el escenario completo. Ninguno
+se presenta como una ejecución aprobada.
+
+### Comparación de carga de Documents
+
+Misma carga CRUD pequeña (1 KiB de texto), cinco usuarios durante quince segundos,
+una réplica limitada a 1 CPU/1 GiB y MongoDB temporal. Se utilizó la imagen anterior
+`pdf-document-service-hardened:local` como referencia y la nueva imagen construida
+por la integración. Los IDs de imagen, métricas y muestras están en
+[load-results.json](load-results.json).
+
+| Medida | Antes | Después |
+| --- | --- | --- |
+| Solicitudes | 2583 | 2595 |
+| Solicitudes/s | 171,69 | 172,64 |
+| Error HTTP | 0 % | 0 % |
+| p95 HTTP | 46,22 ms | 47,11 ms |
+| Memoria máxima muestreada (% de 1 GiB) | 6,69 % | 5,65 % |
+
+Son muestras breves de una VM compartida; las diferencias no prueban una mejora
+estadísticamente significativa. El objetivo fue verificar que las protecciones
+no introdujeran una regresión apreciable con este tamaño. No demuestra capacidad
+para documentos grandes ni sustituye una campaña de carga más extensa.
+
+El pico k6 de 100 usuarios **no aprobó** el umbral de menos de 1 % de errores:
+8200 solicitudes, 6741 respuestas 503 por admisión (82,21 %), p95 1120,33 ms.
+Los contadores identificaron todos esos 503 como rechazos de concurrencia; el
+cupo volvió a cero y no se registraron otros estados de error en esas solicitudes.
+La memoria máxima muestreada fue 7,20 % de 1 GiB. No se afirma que una réplica
+soporte 100 usuarios sin rechazos. El pico coincidió con otras verificaciones
+locales, por lo que no se usa para comparar capacidad con otro sistema.
+
+La carga fija de lectura con Vegeta 12.13.0, a 50/s durante 30 s, registró
+**1498 respuestas 200 de 1498**, throughput 49,92/s y p95 18,69 ms. El generador
+produjo 1498 solicitudes, no se redondea a 1500. Consultó un documento sintético
+propio y lo eliminó al finalizar. No compara extracción de PDF.
+
+Se retiraron contenedores, redes y almacenamiento temporales de estas pruebas;
+el despliegue compartido permaneció separado. Los resultados anteriores del
+archivo se conservan como antecedentes y no sustituyen esta evidencia.
+
+
 ## Revisión de estructura, dependencias y contenedor (09/11/2026)
 
 Se migró a `pyproject.toml` y `uv.lock`, con dependencias de producción y pruebas
@@ -34,8 +108,8 @@ configuración fue rechazada al faltar `DOCUMENTS_API_TOKEN`. El YAML de CI y
 `git diff --check` también validaron. Se agregó CI para push y pull request con
 pruebas MongoDB, bloqueo/exportación, auditoría de dependencias, construcción,
 prueba HTTP del contenedor y escaneo de vulnerabilidades de imagen. Las acciones
-y las imágenes de construcción/escaneo se fijan por commit o digest. **No se ha
-observado una ejecución remota de este workflow: los cambios siguen locales.**
+y las imágenes de construcción/escaneo se fijan por commit o digest. **El código de esa revisión quedó en el commit `b4fd3df`. Este informe no acredita
+una ejecución remota del workflow.**
 
 La auditoría `pip-audit` de las **16 dependencias de producción** no encontró
 vulnerabilidades conocidas. El escaneo de imagen y sus riesgos residuales se

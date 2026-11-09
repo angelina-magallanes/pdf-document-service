@@ -4,11 +4,11 @@ from http import HTTPStatus
 from fastapi import Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from pymongo.errors import DocumentTooLarge, OperationFailure, PyMongoError
 from starlette.exceptions import HTTPException
 
 from app.schemas import Problem
-from app.domain import DocumentNotFound, InvalidDocumentId
+from app.domain import (DocumentNotFound, InvalidDocumentId, DocumentTooLarge,
+                        PersistenceUnavailable, PageTooLarge)
 
 logger = logging.getLogger(__name__)
 
@@ -54,17 +54,14 @@ async def validation_error(request: Request, exc: RequestValidationError):
     return problem_response(request, 422, "Solicitud inválida", errors=errors)
 
 
-async def database_error(request: Request, exc: PyMongoError):
-    # MongoDB también puede rechazar el BSON con BSONObjectTooLarge (10334).
-    if isinstance(exc, OperationFailure) and exc.code == 10334:
-        return await document_too_large(request, exc)
+async def database_error(request: Request, exc: PersistenceUnavailable):
     logger.warning("MongoDB no disponible request_id=%s", request.state.request_id)
     return problem_response(
         request, 503, "Base de datos no disponible", headers={"Retry-After": "1"},
     )
 
 
-async def document_too_large(request: Request, exc: DocumentTooLarge | OperationFailure):
+async def document_too_large(request: Request, exc: DocumentTooLarge):
     return problem_response(request, 413, "El documento excede el tamaño permitido por MongoDB")
 
 
@@ -74,3 +71,7 @@ async def domain_error(request: Request, exc: Exception):
     if isinstance(exc, InvalidDocumentId):
         return problem_response(request, 422, "El ID debe tener 24 caracteres hexadecimales")
     return problem_response(request, 409, "Conflicto al guardar el documento; reintentá")
+
+
+async def page_too_large(request: Request, exc: PageTooLarge):
+    return problem_response(request, 413, "La página excede el límite; reducir limit o consultar por ID")

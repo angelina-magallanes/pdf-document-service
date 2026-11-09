@@ -1,0 +1,35 @@
+groups:
+  - name: documents
+    rules:
+      - alert: DocumentsUnavailable
+        expr: up{job="documents"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: No se puede consultar una réplica de Documents
+          description: Revisar DNS, token del scraper, proceso y conectividad según docs/operacion.md.
+      - alert: DocumentsErrors
+        expr: sum(rate(documents_http_requests_total{route!="/metrics",status=~"5.."}[5m])) / clamp_min(sum(rate(documents_http_requests_total{route!="/metrics"}[5m])), 0.001) > 0.05
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: Más del 5% de respuestas de Documents son errores 5xx
+          description: Comprobar readiness, MongoDB y admisión antes de aumentar concurrencia.
+      - alert: DocumentsSaturated
+        expr: sum(rate(documents_admission_rejections_total[5m])) > 0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: Documents rechaza solicitudes por saturación sostenida
+          description: Medir latencia, CPU y memoria; revisar los límites y el presupuesto del consumidor.
+      - alert: DocumentsHighLatency
+        expr: histogram_quantile(0.95, sum by (le) (rate(documents_http_request_duration_seconds_bucket{route!="/metrics"}[5m]))) > 2
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: Latencia p95 de Documents superior a dos segundos
+          description: Revisar MongoDB, tamaño del Markdown y carga; el histograma mide hasta las cabeceras.

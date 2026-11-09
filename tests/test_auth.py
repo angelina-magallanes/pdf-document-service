@@ -45,7 +45,7 @@ def test_rechaza_credenciales_antes_de_validar_o_consultar_mongo(storage, method
 @pytest.mark.parametrize("scheme", ["Bearer", "bearer", "BEARER"])
 def test_token_valido_permite_acceso(storage, api_token, scheme):
     collection, _ = storage
-    collection.find.return_value.sort.return_value.skip.return_value.limit.return_value = []
+    collection.find.return_value.sort.return_value.skip.return_value.limit.return_value.__iter__.return_value = iter([])
     with TestClient(api.app) as client:
         response = client.get("/documents", headers={"Authorization": f"{scheme} {api_token}"})
     assert response.status_code == 200
@@ -81,7 +81,7 @@ def test_openapi_declara_bearer_en_todas_las_operaciones_de_documentos(storage):
     assert spec["components"]["securitySchemes"]["DocumentsBearer"]["scheme"] == "bearer"
     for path, operations in spec["paths"].items():
         for operation in operations.values():
-            if path.startswith("/documents"):
+            if path.startswith("/documents") or path == "/metrics":
                 assert operation["security"] == [{"DocumentsBearer": []}]
                 assert "401" in operation["responses"]
             else:

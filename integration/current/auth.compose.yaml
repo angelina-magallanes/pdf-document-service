@@ -1,0 +1,21 @@
+services:
+  documents:
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    tmpfs: ["/tmp:rw,noexec,nosuid,size=16m"]
+    environment:
+      DOCUMENTS_API_TOKEN: ${DOCUMENTS_API_TOKEN:?Temporary test token required}
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1G
+  api:
+    environment:
+      DOCUMENTS_API_TOKEN: ${DOCUMENTS_API_TOKEN:?Temporary test token required}
+  client:
+    environment:
+      DOCUMENTS_API_TOKEN: ${DOCUMENTS_API_TOKEN:?Temporary test token required}
+    volumes:
+      - ${DOCUMENTS_TEST_HARNESS}/auth_check.py:/tmp/auth_check.py:ro

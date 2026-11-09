@@ -3,11 +3,7 @@ import os
 from pymongo import MongoClient
 
 
-def positive_int(name: str, default: int) -> int:
-    value = int(os.getenv(name, str(default)))
-    if value <= 0:
-        raise ValueError(f"{name} debe ser mayor que cero")
-    return value
+from app.settings import positive_int
 
 
 timeout_ms = positive_int("MONGODB_TIMEOUT_MS", 1500)

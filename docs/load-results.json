@@ -1,0 +1,991 @@
+{
+  "scope": "Documents CRUD, not PDF extraction; one replica, 1 CPU, 1 GiB",
+  "runs": [
+    {
+      "run": "documents-load-9877cbbee7",
+      "profile": "smoke",
+      "content_bytes": 1024,
+      "documents_image": "sha256:c9e7d02484ebfd8cf128900e06709ea4a05ecb36a258ed7096eaa3756466e59f",
+      "k6_image": "sha256:3e4186aea62e11a45560bfc51e19eeafe82fc07ce069c78aff44b7ff893d9a5e",
+      "replicas": 1,
+      "cpu_limit": 1,
+      "memory_limit": "1GiB",
+      "passed": true,
+      "metrics": {
+        "iterations": {
+          "count": 861,
+          "rate": 57.23106232461471
+        },
+        "http_req_connecting": {
+          "max": 2.757224,
+          "p(90)": 0,
+          "p(95)": 0,
+          "avg": 0.0025395574912891986,
+          "min": 0,
+          "med": 0
+        },
+        "http_req_waiting": {
+          "avg": 27.236770528068092,
+          "min": 6.600104,
+          "med": 25.827553,
+          "max": 127.50295,
+          "p(90)": 39.260215200000005,
+          "p(95)": 43.92128300000001
+        },
+        "vus": {
+          "max": 5,
+          "value": 5,
+          "min": 5
+        },
+        "http_reqs": {
+          "count": 2583,
+          "rate": 171.69318697384412
+        },
+        "http_req_tls_handshaking": {
+          "min": 0,
+          "med": 0,
+          "max": 0,
+          "p(90)": 0,
+          "p(95)": 0,
+          "avg": 0
+        },
+        "http_req_receiving": {
+          "p(90)": 3.1952502000000007,
+          "p(95)": 4.141292600000002,
+          "avg": 1.3824934490902068,
+          "min": 0.015189,
+          "med": 1.07737,
+          "max": 23.485613
+        },
+        "data_sent": {
+          "count": 1718628,
+          "rate": 114237.98627273859
+        },
+        "http_req_blocked": {
+          "p(95)": 0.012062000000000002,
+          "avg": 0.01909030274874172,
+          "min": 0.002355,
+          "med": 0.007204,
+          "max": 10.02407,
+          "p(90)": 0.010468000000000002
+        },
+        "http_req_failed": {
+          "passes": 0,
+          "fails": 2583,
+          "thresholds": {
+            "rate<0.01": false
+          },
+          "value": 0
+        },
+        "data_received": {
+          "count": 2586516,
+          "rate": 171926.89709595023
+        },
+        "vus_max": {
+          "value": 5,
+          "min": 5,
+          "max": 5
+        },
+        "checks": {
+          "passes": 3444,
+          "fails": 0,
+          "thresholds": {
+            "rate>0.99": false
+          },
+          "value": 1
+        },
+        "http_req_duration{expected_response:true}": {
+          "avg": 28.665940631436225,
+          "min": 6.781041,
+          "med": 27.450772,
+          "max": 130.024764,
+          "p(90)": 41.6428652,
+          "p(95)": 46.2190169
+        },
+        "http_req_sending": {
+          "min": 0.008125,
+          "med": 0.025128,
+          "max": 4.190495,
+          "p(90)": 0.040758,
+          "p(95)": 0.06681800000000002,
+          "avg": 0.04667665427797134
+        },
+        "iteration_duration": {
+          "p(90)": 109.265421,
+          "p(95)": 118.206378,
+          "avg": 87.19278521951207,
+          "min": 45.558623,
+          "med": 84.064952,
+          "max": 204.959237
+        },
+        "http_req_duration": {
+          "p(95)": 46.2190169,
+          "avg": 28.665940631436225,
+          "min": 6.781041,
+          "med": 27.450772,
+          "max": 130.024764,
+          "p(90)": 41.6428652,
+          "thresholds": {
+            "p(95)<2000": false
+          }
+        }
+      },
+      "resource_samples": [
+        {
+          "time": 1794254438.6852536,
+          "stats": {
+            "BlockIO": "80.3MB / 541kB",
+            "CPUPerc": "62.53%",
+            "Container": "documents-load-9877cbbee7-documents",
+            "ID": "36b3f42894b7",
+            "MemPerc": "6.66%",
+            "MemUsage": "68.21MiB / 1GiB",
+            "Name": "documents-load-9877cbbee7-documents",
+            "NetIO": "138kB / 188kB",
+            "PIDs": "9"
+          }
+        },
+        {
+          "time": 1794254440.6077654,
+          "stats": {
+            "BlockIO": "80.3MB / 549kB",
+            "CPUPerc": "111.20%",
+            "Container": "documents-load-9877cbbee7-documents",
+            "ID": "36b3f42894b7",
+            "MemPerc": "6.67%",
+            "MemUsage": "68.3MiB / 1GiB",
+            "Name": "documents-load-9877cbbee7-documents",
+            "NetIO": "555kB / 763kB",
+            "PIDs": "9"
+          }
+        },
+        {
+          "time": 1794254442.6129396,
+          "stats": {
+            "BlockIO": "80.3MB / 549kB",
+            "CPUPerc": "115.40%",
+            "Container": "documents-load-9877cbbee7-documents",
+            "ID": "36b3f42894b7",
+            "MemPerc": "6.67%",
+            "MemUsage": "68.34MiB / 1GiB",
+            "Name": "documents-load-9877cbbee7-documents",
+            "NetIO": "1.06MB / 1.45MB",
+            "PIDs": "9"
+          }
+        },
+        {
+          "time": 1794254444.6255667,
+          "stats": {
+            "BlockIO": "80.3MB / 549kB",
+            "CPUPerc": "108.02%",
+            "Container": "documents-load-9877cbbee7-documents",
+            "ID": "36b3f42894b7",
+            "MemPerc": "6.67%",
+            "MemUsage": "68.27MiB / 1GiB",
+            "Name": "documents-load-9877cbbee7-documents",
+            "NetIO": "1.54MB / 2.1MB",
+            "PIDs": "9"
+          }
+        },
+        {
+          "time": 1794254446.6389387,
+          "stats": {
+            "BlockIO": "80.3MB / 549kB",
+            "CPUPerc": "108.15%",
+            "Container": "documents-load-9877cbbee7-documents",
+            "ID": "36b3f42894b7",
+            "MemPerc": "6.69%",
+            "MemUsage": "68.51MiB / 1GiB",
+            "Name": "documents-load-9877cbbee7-documents",
+            "NetIO": "1.98MB / 2.7MB",
+            "PIDs": "9"
+          }
+        },
+        {
+          "time": 1794254448.6412263,
+          "stats": {
+            "BlockIO": "80.3MB / 549kB",
+            "CPUPerc": "111.84%",
+            "Container": "documents-load-9877cbbee7-documents",
+            "ID": "36b3f42894b7",
+            "MemPerc": "6.68%",
+            "MemUsage": "68.45MiB / 1GiB",
+            "Name": "documents-load-9877cbbee7-documents",
+            "NetIO": "2.45MB / 3.35MB",
+            "PIDs": "9"
+          }
+        },
+        {
+          "time": 1794254450.6497743,
+          "stats": {
+            "BlockIO": "80.3MB / 549kB",
+            "CPUPerc": "111.90%",
+            "Container": "documents-load-9877cbbee7-documents",
+            "ID": "36b3f42894b7",
+            "MemPerc": "5.79%",
+            "MemUsage": "59.33MiB / 1GiB",
+            "Name": "documents-load-9877cbbee7-documents",
+            "NetIO": "2.88MB / 3.95MB",
+            "PIDs": "9"
+          }
+        },
+        {
+          "time": 1794254452.731477,
+          "stats": {
+            "BlockIO": "80.3MB / 549kB",
+            "CPUPerc": "115.52%",
+            "Container": "documents-load-9877cbbee7-documents",
+            "ID": "36b3f42894b7",
+            "MemPerc": "5.79%",
+            "MemUsage": "59.27MiB / 1GiB",
+            "Name": "documents-load-9877cbbee7-documents",
+            "NetIO": "3.35MB / 4.6MB",
+            "PIDs": "9"
+          }
+        },
+        {
+          "time": 1794254454.738651,
+          "stats": {
+            "BlockIO": "80.3MB / 549kB",
+            "CPUPerc": "0.38%",
+            "Container": "documents-load-9877cbbee7-documents",
+            "ID": "36b3f42894b7",
+            "MemPerc": "5.77%",
+            "MemUsage": "59.1MiB / 1GiB",
+            "Name": "documents-load-9877cbbee7-documents",
+            "NetIO": "3.42MB / 4.7MB",
+            "PIDs": "9"
+          }
+        }
+      ]
+    },
+    {
+      "run": "documents-load-c01ea07925",
+      "profile": "smoke",
+      "content_bytes": 1024,
+      "documents_image": "sha256:3b2a7f18775e7901cb71e85323d1ee6f6d1441b5aa3abaa03c6b1b0e96f399ff",
+      "k6_image": "sha256:3e4186aea62e11a45560bfc51e19eeafe82fc07ce069c78aff44b7ff893d9a5e",
+      "replicas": 1,
+      "cpu_limit": 1,
+      "memory_limit": "1GiB",
+      "passed": true,
+      "metrics": {
+        "http_req_connecting": {
+          "min": 0,
+          "med": 0,
+          "max": 0.756528,
+          "p(90)": 0,
+          "p(95)": 0,
+          "avg": 0.0009478570327552987
+        },
+        "http_req_sending": {
+          "avg": 0.05741397533718682,
+          "min": 0.008967,
+          "med": 0.02579,
+          "max": 7.00255,
+          "p(90)": 0.05329699999999999,
+          "p(95)": 0.09581969999999995
+        },
+        "iteration_duration": {
+          "min": 38.413386,
+          "med": 81.902482,
+          "max": 237.710336,
+          "p(90)": 107.74111020000001,
+          "p(95)": 126.89440779999998,
+          "avg": 86.75688982196536
+        },
+        "data_received": {
+          "count": 2598526,
+          "rate": 172877.36081782612
+        },
+        "iterations": {
+          "count": 865,
+          "rate": 57.547593176831626
+        },
+        "http_req_tls_handshaking": {
+          "max": 0,
+          "p(90)": 0,
+          "p(95)": 0,
+          "avg": 0,
+          "min": 0,
+          "med": 0
+        },
+        "http_req_receiving": {
+          "avg": 1.3550141699421963,
+          "min": 0.019958,
+          "med": 1.0795,
+          "max": 21.556033,
+          "p(90)": 3.1077759999999985,
+          "p(95)": 3.8371798999999953
+        },
+        "checks": {
+          "fails": 0,
+          "passes": 3460,
+          "thresholds": {
+            "rate>0.99": false
+          },
+          "value": 1
+        },
+        "http_req_duration": {
+          "p(90)": 40.997896600000004,
+          "p(95)": 47.106572899999975,
+          "avg": 28.492550906743777,
+          "min": 4.570367,
+          "med": 26.91992,
+          "max": 123.295349,
+          "thresholds": {
+            "p(95)<2000": false
+          }
+        },
+        "vus": {
+          "min": 5,
+          "max": 5,
+          "value": 5
+        },
+        "http_req_waiting": {
+          "avg": 27.080122761464363,
+          "min": 4.295236,
+          "med": 25.516205,
+          "max": 121.831498,
+          "p(90)": 38.5699028,
+          "p(95)": 44.575393299999995
+        },
+        "http_req_blocked": {
+          "med": 0.007254,
+          "max": 5.031364,
+          "p(90)": 0.010456599999999998,
+          "p(95)": 0.012530299999999994,
+          "avg": 0.016253319845857404,
+          "min": 0.002094
+        },
+        "http_req_failed": {
+          "passes": 0,
+          "fails": 2595,
+          "thresholds": {
+            "rate<0.01": false
+          },
+          "value": 0
+        },
+        "http_req_duration{expected_response:true}": {
+          "avg": 28.492550906743777,
+          "min": 4.570367,
+          "med": 26.91992,
+          "max": 123.295349,
+          "p(90)": 40.997896600000004,
+          "p(95)": 47.106572899999975
+        },
+        "http_reqs": {
+          "count": 2595,
+          "rate": 172.6427795304949
+        },
+        "data_sent": {
+          "rate": 114870.31830171216,
+          "count": 1726620
+        },
+        "vus_max": {
+          "value": 5,
+          "min": 5,
+          "max": 5
+        }
+      },
+      "resource_samples": [
+        {
+          "time": 1794254514.597009,
+          "stats": {
+            "BlockIO": "79.7MB / 0B",
+            "CPUPerc": "58.56%",
+            "Container": "documents-load-c01ea07925-documents",
+            "ID": "09dbfd1b999b",
+            "MemPerc": "5.65%",
+            "MemUsage": "57.83MiB / 1GiB",
+            "Name": "documents-load-c01ea07925-documents",
+            "NetIO": "141kB / 185kB",
+            "PIDs": "9"
+          }
+        },
+        {
+          "time": 1794254516.6049535,
+          "stats": {
+            "BlockIO": "79.7MB / 0B",
+            "CPUPerc": "108.27%",
+            "Container": "documents-load-c01ea07925-documents",
+            "ID": "09dbfd1b999b",
+            "MemPerc": "5.65%",
+            "MemUsage": "57.84MiB / 1GiB",
+            "Name": "documents-load-c01ea07925-documents",
+            "NetIO": "631kB / 856kB",
+            "PIDs": "9"
+          }
+        },
+        {
+          "time": 1794254518.6331964,
+          "stats": {
+            "BlockIO": "79.7MB / 0B",
+            "CPUPerc": "114.44%",
+            "Container": "documents-load-c01ea07925-documents",
+            "ID": "09dbfd1b999b",
+            "MemPerc": "5.65%",
+            "MemUsage": "57.87MiB / 1GiB",
+            "Name": "documents-load-c01ea07925-documents",
+            "NetIO": "1.12MB / 1.52MB",
+            "PIDs": "9"
+          }
+        },
+        {
+          "time": 1794254520.6210713,
+          "stats": {
+            "BlockIO": "79.7MB / 0B",
+            "CPUPerc": "89.48%",
+            "Container": "documents-load-c01ea07925-documents",
+            "ID": "09dbfd1b999b",
+            "MemPerc": "5.65%",
+            "MemUsage": "57.91MiB / 1GiB",
+            "Name": "documents-load-c01ea07925-documents",
+            "NetIO": "1.47MB / 2.01MB",
+            "PIDs": "9"
+          }
+        },
+        {
+          "time": 1794254522.6884983,
+          "stats": {
+            "BlockIO": "79.7MB / 0B",
+            "CPUPerc": "106.56%",
+            "Container": "documents-load-c01ea07925-documents",
+            "ID": "09dbfd1b999b",
+            "MemPerc": "5.65%",
+            "MemUsage": "57.88MiB / 1GiB",
+            "Name": "documents-load-c01ea07925-documents",
+            "NetIO": "1.95MB / 2.66MB",
+            "PIDs": "9"
+          }
+        },
+        {
+          "time": 1794254524.6855829,
+          "stats": {
+            "BlockIO": "79.7MB / 0B",
+            "CPUPerc": "107.07%",
+            "Container": "documents-load-c01ea07925-documents",
+            "ID": "09dbfd1b999b",
+            "MemPerc": "5.64%",
+            "MemUsage": "57.73MiB / 1GiB",
+            "Name": "documents-load-c01ea07925-documents",
+            "NetIO": "2.44MB / 3.33MB",
+            "PIDs": "9"
+          }
+        },
+        {
+          "time": 1794254526.6945913,
+          "stats": {
+            "BlockIO": "79.7MB / 0B",
+            "CPUPerc": "114.80%",
+            "Container": "documents-load-c01ea07925-documents",
+            "ID": "09dbfd1b999b",
+            "MemPerc": "5.64%",
+            "MemUsage": "57.79MiB / 1GiB",
+            "Name": "documents-load-c01ea07925-documents",
+            "NetIO": "2.87MB / 3.93MB",
+            "PIDs": "9"
+          }
+        },
+        {
+          "time": 1794254528.7058704,
+          "stats": {
+            "BlockIO": "79.7MB / 0B",
+            "CPUPerc": "107.99%",
+            "Container": "documents-load-c01ea07925-documents",
+            "ID": "09dbfd1b999b",
+            "MemPerc": "5.65%",
+            "MemUsage": "57.87MiB / 1GiB",
+            "Name": "documents-load-c01ea07925-documents",
+            "NetIO": "3.35MB / 4.59MB",
+            "PIDs": "9"
+          }
+        },
+        {
+          "time": 1794254530.9629073,
+          "stats": {
+            "BlockIO": "79.7MB / 0B",
+            "CPUPerc": "0.37%",
+            "Container": "documents-load-c01ea07925-documents",
+            "ID": "09dbfd1b999b",
+            "MemPerc": "5.60%",
+            "MemUsage": "57.38MiB / 1GiB",
+            "Name": "documents-load-c01ea07925-documents",
+            "NetIO": "3.44MB / 4.71MB",
+            "PIDs": "9"
+          }
+        }
+      ]
+    },
+    {
+      "run": "documents-load-f726863cb5",
+      "profile": "spike",
+      "content_bytes": 1024,
+      "documents_image": "sha256:3b2a7f18775e7901cb71e85323d1ee6f6d1441b5aa3abaa03c6b1b0e96f399ff",
+      "k6_image": "sha256:3e4186aea62e11a45560bfc51e19eeafe82fc07ce069c78aff44b7ff893d9a5e",
+      "replicas": 1,
+      "cpu_limit": 1,
+      "memory_limit": "1GiB",
+      "passed": false,
+      "cleanup_ok": true,
+      "metrics": {
+        "http_req_connecting": {
+          "min": 0,
+          "med": 0,
+          "max": 153.577957,
+          "p(90)": 0,
+          "p(95)": 0,
+          "avg": 0.06270548512195125
+        },
+        "http_req_receiving": {
+          "min": 0.022453,
+          "med": 24.3965705,
+          "max": 662.521756,
+          "p(90)": 91.88025380000006,
+          "p(95)": 123.42117964999994,
+          "avg": 40.61891178378017
+        },
+        "http_req_failed": {
+          "fails": 1459,
+          "passes": 6741,
+          "thresholds": {
+            "rate<0.01": true
+          },
+          "value": 0.8220731707317073
+        },
+        "http_req_duration{expected_response:true}": {
+          "avg": 443.1532324599051,
+          "min": 4.037963,
+          "med": 242.01635,
+          "max": 4069.787236,
+          "p(90)": 1412.2802998000006,
+          "p(95)": 1629.9078586999997
+        },
+        "http_req_sending": {
+          "max": 131.271348,
+          "p(90)": 0.090555,
+          "p(95)": 0.23618454999999944,
+          "avg": 0.26331121317073386,
+          "min": 0.007755,
+          "med": 0.026876999999999998
+        },
+        "data_sent": {
+          "count": 10054513,
+          "rate": 251200.27871928675
+        },
+        "vus_max": {
+          "value": 100,
+          "min": 100,
+          "max": 100
+        },
+        "iteration_duration": {
+          "min": 15.161174,
+          "med": 240.67990650000002,
+          "max": 5981.333428,
+          "p(90)": 763.9633364000002,
+          "p(95)": 1250.4439501499999,
+          "avg": 449.3119770218492
+        },
+        "http_req_tls_handshaking": {
+          "p(90)": 0,
+          "p(95)": 0,
+          "avg": 0,
+          "min": 0,
+          "med": 0,
+          "max": 0
+        },
+        "http_req_waiting": {
+          "avg": 326.6559846115857,
+          "min": 3.901921,
+          "med": 184.9796115,
+          "max": 3955.185661,
+          "p(90)": 612.7255002000003,
+          "p(95)": 992.2517847999995
+        },
+        "iterations": {
+          "count": 6728,
+          "rate": 168.0912317904767
+        },
+        "http_req_duration": {
+          "p(90)": 688.7964697,
+          "p(95)": 1120.3342552499969,
+          "avg": 367.53820760853694,
+          "min": 4.037963,
+          "med": 211.483869,
+          "max": 4069.787236,
+          "thresholds": {
+            "p(95)<2000": false
+          }
+        },
+        "vus": {
+          "value": 2,
+          "min": 2,
+          "max": 100
+        },
+        "checks": {
+          "fails": 7090,
+          "passes": 1846,
+          "thresholds": {
+            "rate>0.99": true
+          },
+          "value": 0.20658012533572068
+        },
+        "http_reqs": {
+          "count": 8200,
+          "rate": 204.86743470301857
+        },
+        "http_req_blocked": {
+          "med": 0.0069685,
+          "max": 153.68302,
+          "p(90)": 0.011712,
+          "p(95)": 0.018246949999999984,
+          "avg": 0.10567189987804801,
+          "min": 0.002275
+        },
+        "data_received": {
+          "count": 4407931,
+          "rate": 110127.01418511114
+        }
+      },
+      "resource_samples": [
+        {
+          "time": 1794254583.2577987,
+          "stats": {
+            "BlockIO": "69.8MB / 0B",
+            "CPUPerc": "27.53%",
+            "Container": "documents-load-f726863cb5-documents",
+            "ID": "8495aa816c57",
+            "MemPerc": "7.14%",
+            "MemUsage": "73.16MiB / 1GiB",
+            "Name": "documents-load-f726863cb5-documents",
+            "NetIO": "55kB / 68.8kB",
+            "PIDs": "8"
+          }
+        },
+        {
+          "time": 1794254585.2692196,
+          "stats": {
+            "BlockIO": "69.8MB / 0B",
+            "CPUPerc": "79.27%",
+            "Container": "documents-load-f726863cb5-documents",
+            "ID": "8495aa816c57",
+            "MemPerc": "7.20%",
+            "MemUsage": "73.73MiB / 1GiB",
+            "Name": "documents-load-f726863cb5-documents",
+            "NetIO": "397kB / 504kB",
+            "PIDs": "13"
+          }
+        },
+        {
+          "time": 1794254587.3323636,
+          "stats": {
+            "BlockIO": "69.8MB / 0B",
+            "CPUPerc": "77.21%",
+            "Container": "documents-load-f726863cb5-documents",
+            "ID": "8495aa816c57",
+            "MemPerc": "5.98%",
+            "MemUsage": "61.2MiB / 1GiB",
+            "Name": "documents-load-f726863cb5-documents",
+            "NetIO": "895kB / 896kB",
+            "PIDs": "13"
+          }
+        },
+        {
+          "time": 1794254589.3640873,
+          "stats": {
+            "BlockIO": "69.8MB / 0B",
+            "CPUPerc": "73.88%",
+            "Container": "documents-load-f726863cb5-documents",
+            "ID": "8495aa816c57",
+            "MemPerc": "6.01%",
+            "MemUsage": "61.57MiB / 1GiB",
+            "Name": "documents-load-f726863cb5-documents",
+            "NetIO": "1.33MB / 1.17MB",
+            "PIDs": "13"
+          }
+        },
+        {
+          "time": 1794254591.3862274,
+          "stats": {
+            "BlockIO": "69.8MB / 442kB",
+            "CPUPerc": "53.71%",
+            "Container": "documents-load-f726863cb5-documents",
+            "ID": "8495aa816c57",
+            "MemPerc": "6.51%",
+            "MemUsage": "66.65MiB / 1GiB",
+            "Name": "documents-load-f726863cb5-documents",
+            "NetIO": "1.72MB / 1.36MB",
+            "PIDs": "13"
+          }
+        },
+        {
+          "time": 1794254593.8652391,
+          "stats": {
+            "BlockIO": "69.8MB / 442kB",
+            "CPUPerc": "43.54%",
+            "Container": "documents-load-f726863cb5-documents",
+            "ID": "8495aa816c57",
+            "MemPerc": "6.57%",
+            "MemUsage": "67.26MiB / 1GiB",
+            "Name": "documents-load-f726863cb5-documents",
+            "NetIO": "2.1MB / 1.54MB",
+            "PIDs": "13"
+          }
+        },
+        {
+          "time": 1794254595.4108608,
+          "stats": {
+            "BlockIO": "69.8MB / 442kB",
+            "CPUPerc": "57.30%",
+            "Container": "documents-load-f726863cb5-documents",
+            "ID": "8495aa816c57",
+            "MemPerc": "6.57%",
+            "MemUsage": "67.3MiB / 1GiB",
+            "Name": "documents-load-f726863cb5-documents",
+            "NetIO": "2.47MB / 1.72MB",
+            "PIDs": "13"
+          }
+        },
+        {
+          "time": 1794254597.4223537,
+          "stats": {
+            "BlockIO": "69.8MB / 442kB",
+            "CPUPerc": "57.95%",
+            "Container": "documents-load-f726863cb5-documents",
+            "ID": "8495aa816c57",
+            "MemPerc": "6.58%",
+            "MemUsage": "67.4MiB / 1GiB",
+            "Name": "documents-load-f726863cb5-documents",
+            "NetIO": "2.99MB / 1.97MB",
+            "PIDs": "12"
+          }
+        },
+        {
+          "time": 1794254599.4808524,
+          "stats": {
+            "BlockIO": "69.8MB / 442kB",
+            "CPUPerc": "58.58%",
+            "Container": "documents-load-f726863cb5-documents",
+            "ID": "8495aa816c57",
+            "MemPerc": "7.02%",
+            "MemUsage": "71.84MiB / 1GiB",
+            "Name": "documents-load-f726863cb5-documents",
+            "NetIO": "3.54MB / 2.24MB",
+            "PIDs": "15"
+          }
+        },
+        {
+          "time": 1794254601.567803,
+          "stats": {
+            "BlockIO": "69.8MB / 442kB",
+            "CPUPerc": "54.36%",
+            "Container": "documents-load-f726863cb5-documents",
+            "ID": "8495aa816c57",
+            "MemPerc": "7.13%",
+            "MemUsage": "72.96MiB / 1GiB",
+            "Name": "documents-load-f726863cb5-documents",
+            "NetIO": "4.07MB / 2.5MB",
+            "PIDs": "15"
+          }
+        },
+        {
+          "time": 1794254603.551391,
+          "stats": {
+            "BlockIO": "69.8MB / 1.85MB",
+            "CPUPerc": "69.50%",
+            "Container": "documents-load-f726863cb5-documents",
+            "ID": "8495aa816c57",
+            "MemPerc": "7.09%",
+            "MemUsage": "72.56MiB / 1GiB",
+            "Name": "documents-load-f726863cb5-documents",
+            "NetIO": "4.57MB / 2.76MB",
+            "PIDs": "15"
+          }
+        },
+        {
+          "time": 1794254605.5866785,
+          "stats": {
+            "BlockIO": "71.1MB / 11.4MB",
+            "CPUPerc": "30.02%",
+            "Container": "documents-load-f726863cb5-documents",
+            "ID": "8495aa816c57",
+            "MemPerc": "6.73%",
+            "MemUsage": "68.95MiB / 1GiB",
+            "Name": "documents-load-f726863cb5-documents",
+            "NetIO": "4.77MB / 2.85MB",
+            "PIDs": "15"
+          }
+        },
+        {
+          "time": 1794254607.6263423,
+          "stats": {
+            "BlockIO": "81.3MB / 34.7MB",
+            "CPUPerc": "49.07%",
+            "Container": "documents-load-f726863cb5-documents",
+            "ID": "8495aa816c57",
+            "MemPerc": "5.57%",
+            "MemUsage": "57.02MiB / 1GiB",
+            "Name": "documents-load-f726863cb5-documents",
+            "NetIO": "5.01MB / 2.97MB",
+            "PIDs": "15"
+          }
+        },
+        {
+          "time": 1794254609.6317666,
+          "stats": {
+            "BlockIO": "82.1MB / 34.7MB",
+            "CPUPerc": "72.10%",
+            "Container": "documents-load-f726863cb5-documents",
+            "ID": "8495aa816c57",
+            "MemPerc": "5.60%",
+            "MemUsage": "57.32MiB / 1GiB",
+            "Name": "documents-load-f726863cb5-documents",
+            "NetIO": "5.52MB / 3.23MB",
+            "PIDs": "13"
+          }
+        },
+        {
+          "time": 1794254611.6537154,
+          "stats": {
+            "BlockIO": "82.2MB / 34.7MB",
+            "CPUPerc": "111.21%",
+            "Container": "documents-load-f726863cb5-documents",
+            "ID": "8495aa816c57",
+            "MemPerc": "5.62%",
+            "MemUsage": "57.55MiB / 1GiB",
+            "Name": "documents-load-f726863cb5-documents",
+            "NetIO": "6.41MB / 3.67MB",
+            "PIDs": "13"
+          }
+        },
+        {
+          "time": 1794254613.6647346,
+          "stats": {
+            "BlockIO": "82.3MB / 34.7MB",
+            "CPUPerc": "111.32%",
+            "Container": "documents-load-f726863cb5-documents",
+            "ID": "8495aa816c57",
+            "MemPerc": "5.62%",
+            "MemUsage": "57.51MiB / 1GiB",
+            "Name": "documents-load-f726863cb5-documents",
+            "NetIO": "7.73MB / 4.34MB",
+            "PIDs": "13"
+          }
+        },
+        {
+          "time": 1794254615.6803744,
+          "stats": {
+            "BlockIO": "82.4MB / 34.7MB",
+            "CPUPerc": "109.81%",
+            "Container": "documents-load-f726863cb5-documents",
+            "ID": "8495aa816c57",
+            "MemPerc": "5.63%",
+            "MemUsage": "57.63MiB / 1GiB",
+            "Name": "documents-load-f726863cb5-documents",
+            "NetIO": "9.07MB / 5.05MB",
+            "PIDs": "13"
+          }
+        },
+        {
+          "time": 1794254617.690347,
+          "stats": {
+            "BlockIO": "82.4MB / 34.7MB",
+            "CPUPerc": "118.58%",
+            "Container": "documents-load-f726863cb5-documents",
+            "ID": "8495aa816c57",
+            "MemPerc": "5.63%",
+            "MemUsage": "57.61MiB / 1GiB",
+            "Name": "documents-load-f726863cb5-documents",
+            "NetIO": "10.3MB / 5.77MB",
+            "PIDs": "13"
+          }
+        },
+        {
+          "time": 1794254619.6934164,
+          "stats": {
+            "BlockIO": "82.6MB / 34.7MB",
+            "CPUPerc": "85.22%",
+            "Container": "documents-load-f726863cb5-documents",
+            "ID": "8495aa816c57",
+            "MemPerc": "5.62%",
+            "MemUsage": "57.53MiB / 1GiB",
+            "Name": "documents-load-f726863cb5-documents",
+            "NetIO": "11.2MB / 6.41MB",
+            "PIDs": "14"
+          }
+        },
+        {
+          "time": 1794254621.7016485,
+          "stats": {
+            "BlockIO": "82.7MB / 34.7MB",
+            "CPUPerc": "104.14%",
+            "Container": "documents-load-f726863cb5-documents",
+            "ID": "8495aa816c57",
+            "MemPerc": "5.63%",
+            "MemUsage": "57.66MiB / 1GiB",
+            "Name": "documents-load-f726863cb5-documents",
+            "NetIO": "11.7MB / 6.96MB",
+            "PIDs": "16"
+          }
+        },
+        {
+          "time": 1794254623.742451,
+          "stats": {
+            "BlockIO": "82.9MB / 34.7MB",
+            "CPUPerc": "17.60%",
+            "Container": "documents-load-f726863cb5-documents",
+            "ID": "8495aa816c57",
+            "MemPerc": "5.58%",
+            "MemUsage": "57.17MiB / 1GiB",
+            "Name": "documents-load-f726863cb5-documents",
+            "NetIO": "12MB / 7.37MB",
+            "PIDs": "16"
+          }
+        }
+      ]
+    }
+  ],
+  "vegeta": {
+    "run": "documents-vegeta-28d850483c",
+    "image": "sha256:3b2a7f18775e7901cb71e85323d1ee6f6d1441b5aa3abaa03c6b1b0e96f399ff",
+    "rate": 50,
+    "seconds": 30,
+    "vegeta_version": "12.13.0",
+    "replicas": 1,
+    "cpu_limit": 1,
+    "memory_limit": "1GiB",
+    "metrics": {
+      "latencies": {
+        "total": 13256635689,
+        "mean": 8849556,
+        "50th": 7246774,
+        "90th": 15019747,
+        "95th": 18690081,
+        "99th": 25877469,
+        "max": 76952804,
+        "min": 4292215
+      },
+      "bytes_in": {
+        "total": 1875496,
+        "mean": 1252
+      },
+      "bytes_out": {
+        "total": 0,
+        "mean": 0
+      },
+      "earliest": "2026-11-09T20:04:30.96532716Z",
+      "latest": "2026-11-09T20:05:00.960085273Z",
+      "end": "2026-11-09T20:05:00.972310144Z",
+      "duration": 29994758113,
+      "wait": 12224871,
+      "requests": 1498,
+      "rate": 49.94205968778102,
+      "throughput": 49.92171324917095,
+      "success": 1,
+      "status_codes": {
+        "200": 1498
+      },
+      "errors": []
+    }
+  }
+}

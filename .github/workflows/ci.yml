@@ -39,6 +39,17 @@ jobs:
           docker run --rm --read-only --cap-drop ALL --security-opt no-new-privileges:true documents:ci python -c "import os, importlib.util; assert os.getuid() != 0; assert importlib.util.find_spec('pytest') is None; assert importlib.util.find_spec('pip') is None; import app.main"
       - name: HTTP smoke test and MongoDB outage recovery
         run: python scripts/validate_container.py --image documents:ci
+      - name: Isolated persistence load smoke test
+        run: |
+          docker pull grafana/k6@sha256:3e4186aea62e11a45560bfc51e19eeafe82fc07ce069c78aff44b7ff893d9a5e
+          python scripts/load_isolated.py --image documents:ci
+      - name: Preserve load evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: documents-load
+          path: .integration/load/
+          if-no-files-found: ignore
       - name: Scan image for fixable high and critical vulnerabilities
         run: >-
           docker run --rm -v /var/run/docker.sock:/var/run/docker.sock

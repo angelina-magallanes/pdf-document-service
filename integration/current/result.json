@@ -1,0 +1,292 @@
+{
+  "run_id": "20261109195805-7ad8af59",
+  "project": "pdf-stack-20261109195805-7ad8af59",
+  "versions": {
+    "api": {
+      "repository": "https://github.com/Lourdesrizza/pdf-api-service.git",
+      "commit": "e191097bba601efffe729b811ccbf872b483318b"
+    },
+    "extractor": {
+      "repository": "https://github.com/MaitePuente/pdf-extractor-service.git",
+      "commit": "6720c32f21d404231da131090b9f094eaa4728f6"
+    },
+    "documents": {
+      "repository": "https://github.com/angelina-magallanes/pdf-document-service.git",
+      "commit": "b4fd3dfc5c2c98e0c8a6a227e04aea18892982db"
+    }
+  },
+  "mongo_database": "pdf_stack_20261109195805_7ad8af59",
+  "checks": [
+    "generar-pdfs",
+    "construir-imagenes",
+    "iniciar-stack",
+    "autenticacion",
+    "flujo-completo",
+    "reiniciar-documents",
+    "esperar-documents",
+    "persistencia",
+    "detener-extractor",
+    "extractor-no-disponible",
+    "restaurar-extractor",
+    "detener-documents",
+    "documents-no-disponible"
+  ],
+  "passed": true,
+  "cleanup_ok": true,
+  "authenticated": true,
+  "local_documents": true,
+  "documents_source_sha256": {
+    "Dockerfile": "e295657b533d06ac26d5393aceae696a3a839c06d8e6f8a1149b9bbb6f8c230f",
+    "pyproject.toml": "58c2793966f41c58c364976a3716688a0d4c9ce7b76423575812b2e454d93b16",
+    "uv.lock": "e2d6582fedef5f29f582b27070090859fdf12b2f4301f52fff5aa00ac08ec428",
+    "app/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "app/auth.py": "74ade7feb9eb4088419c659ad717080e9572e733ba1501f7f5c8d59b54d8c4d1",
+    "app/body_limit.py": "4b8488372db9845e7daa4ed6394507ac5438862d51db8330ec39f8d264599238",
+    "app/database.py": "70d7eb854639e41cc6acb50573b123d6cfe39241dd8164fca2fe2a68b41bdb2b",
+    "app/dependencies.py": "99035670c1f67f60937ba33c636b2d2cb9845bcb1598e31295ca00b13a6481e0",
+    "app/domain.py": "ca2545003da092b2cdd96dccaead10049b6914799b827e3e339c0853dc29a2b3",
+    "app/errors.py": "33b458999b81d88b6bcf4ad0c988782f3f7e00ad285886ab83c3d646743d23d6",
+    "app/main.py": "db33ad726c6003d26747392db158b4f9d5f298cd093aa525e06df01487c29cfb",
+    "app/metrics.py": "977dd14574b331fdde4367837f39413ef1854587912e6bd595fd7ee0f58485f6",
+    "app/middleware.py": "f547f93cfda0555c7b753ac4903c61c3c17a44cd58ddccc947540563e5f4d8ca",
+    "app/repository.py": "dcc4bd9b6d45fbd4b334a14d4ddb20076c9329dc2cfa726ae7904e9aa79c147b",
+    "app/routes.py": "25390292d5d1df4db33adddce541db48342446da61221b6caaf381f50d876030",
+    "app/schemas.py": "7303d3c86d429e5117e76a04df412bc2cd8935157fc53df85cda41606bc3e4c4",
+    "app/service.py": "1668e8333fcbf8560e3dbc336dcce8581d8434814f92d9d09b45eab3b06acd1a",
+    "app/settings.py": "49ca240f86353b7a5b6e2188486bb8c515035211ae4a33baf76ed3f02b1ea8b8",
+    "app/storage_errors.py": "893c22bb28af529c99b0aba7801205487373becd2bb2278b4a187e2c7bd41301"
+  },
+  "autenticacion": {
+    "public_health": 200,
+    "missing_token": 401,
+    "incorrect_token": 401,
+    "authenticated_list": 200
+  },
+  "flujo-completo": {
+    "checksum": "874290b0b155bc89c5ac083226ee5c854d2dee76f15ab0e8133d4845444cdc0f",
+    "concurrency_checksum": "f6146dcab7423359fd75a6ccea37a5f88aec8b4ac0d3fc24eb858a779f8f7e16",
+    "health": {
+      "status": 200,
+      "body": {
+        "status": "ok",
+        "service": "api"
+      }
+    },
+    "ready": {
+      "status": 200,
+      "body": {
+        "status": "ready",
+        "dependencies": {
+          "extractor": "ok",
+          "documents": "ok"
+        }
+      }
+    },
+    "primary_flow": {
+      "first": {
+        "status": 200,
+        "duration_ms": 1955.915,
+        "document": {
+          "document_id": "6af226065b74a73c91830db0",
+          "checksum": "874290b0b155bc89c5ac083226ee5c854d2dee76f15ab0e8133d4845444cdc0f",
+          "page_count": 1,
+          "source": "extracted",
+          "content_characters": 47,
+          "content_sha256": "da5352c00dbcc9c7ed16950ab7f54233f49479b5827b117b72c60851e6120686",
+          "has_first_page_heading": true,
+          "has_last_page_heading": true
+        }
+      },
+      "second": {
+        "status": 200,
+        "duration_ms": 21.54,
+        "document": {
+          "document_id": "6af226065b74a73c91830db0",
+          "checksum": "874290b0b155bc89c5ac083226ee5c854d2dee76f15ab0e8133d4845444cdc0f",
+          "page_count": 1,
+          "source": "existing",
+          "content_characters": 47,
+          "content_sha256": "da5352c00dbcc9c7ed16950ab7f54233f49479b5827b117b72c60851e6120686",
+          "has_first_page_heading": true,
+          "has_last_page_heading": true
+        }
+      },
+      "multipart": {
+        "status": 200,
+        "duration_ms": 30.3,
+        "document": {
+          "document_id": "6af226065b74a73c91830db0",
+          "checksum": "874290b0b155bc89c5ac083226ee5c854d2dee76f15ab0e8133d4845444cdc0f",
+          "page_count": 1,
+          "source": "existing",
+          "content_characters": 47,
+          "content_sha256": "da5352c00dbcc9c7ed16950ab7f54233f49479b5827b117b72c60851e6120686",
+          "has_first_page_heading": true,
+          "has_last_page_heading": true
+        }
+      },
+      "extract_post_total": {
+        "before": 0,
+        "after_first": 1,
+        "after_second": 1,
+        "after_multipart": 1
+      }
+    },
+    "invalid_inputs": {
+      "invalid_signature": {
+        "status": 400,
+        "body": {
+          "error": "invalid_pdf",
+          "detail": "El archivo no tiene una firma PDF válida."
+        },
+        "extract_post_total": 1,
+        "layer": "API validation; extractor counter unchanged"
+      },
+      "malformed_pdf": {
+        "status": 422,
+        "body": {
+          "error": "pdf_rejected",
+          "detail": "El extractor rechazó el PDF."
+        },
+        "extract_post_total": 2,
+        "layer": "extractor rejection translated to API 422"
+      }
+    },
+    "exclusive_traefik": {
+      "health": {
+        "status": 200,
+        "body": {
+          "status": "ok",
+          "service": "api"
+        }
+      },
+      "ready": {
+        "status": 200,
+        "body": {
+          "status": "ready",
+          "dependencies": {
+            "extractor": "ok",
+            "documents": "ok"
+          }
+        }
+      },
+      "process": {
+        "status": 200,
+        "document": {
+          "document_id": "6af226065b74a73c91830db0",
+          "checksum": "874290b0b155bc89c5ac083226ee5c854d2dee76f15ab0e8133d4845444cdc0f",
+          "page_count": 1,
+          "source": "existing",
+          "content_characters": 47,
+          "content_sha256": "da5352c00dbcc9c7ed16950ab7f54233f49479b5827b117b72c60851e6120686",
+          "has_first_page_heading": true,
+          "has_last_page_heading": true
+        }
+      },
+      "extract_post_total": {
+        "before": 2,
+        "after": 2
+      },
+      "scope": "internal Compose network; file provider; no Docker socket, dashboard or published ports"
+    },
+    "concurrent_same_pdf": {
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "document_id": "6af226075b74a73c91830db1",
+            "checksum": "f6146dcab7423359fd75a6ccea37a5f88aec8b4ac0d3fc24eb858a779f8f7e16",
+            "content": "## Página 1\n\nCONCURRENT API DOCUMENT\n",
+            "page_count": 1,
+            "source": "extracted"
+          }
+        },
+        {
+          "status": 200,
+          "body": {
+            "document_id": "6af226075b74a73c91830db1",
+            "checksum": "f6146dcab7423359fd75a6ccea37a5f88aec8b4ac0d3fc24eb858a779f8f7e16",
+            "content": "## Página 1\n\nCONCURRENT API DOCUMENT\n",
+            "page_count": 1,
+            "source": "existing"
+          }
+        }
+      ],
+      "extract_post_total": {
+        "before": 2,
+        "after": 4
+      },
+      "extraction_count_assertion": "no single-extraction race requirement; Documents uniqueness and consistent result are required"
+    },
+    "direct_counts": {
+      "documents_checksum_reads": "874290b0b155bc89c5ac083226ee5c854d2dee76f15ab0e8133d4845444cdc0f",
+      "extract_post_total_final": 4,
+      "invalid_api_signature_did_not_increment": true,
+      "extractor_rejection_incremented": true
+    }
+  },
+  "persistencia": {
+    "ready": {
+      "status": "ready",
+      "dependencies": {
+        "extractor": "ok",
+        "documents": "ok"
+      }
+    },
+    "after_documents_restart": {
+      "status": 200,
+      "document_id": "6af226065b74a73c91830db0",
+      "checksum": "874290b0b155bc89c5ac083226ee5c854d2dee76f15ab0e8133d4845444cdc0f",
+      "page_count": 1,
+      "source": "existing",
+      "content_characters": 47,
+      "content_sha256": "da5352c00dbcc9c7ed16950ab7f54233f49479b5827b117b72c60851e6120686"
+    },
+    "extract_post_total": {
+      "before": 4,
+      "after": 4
+    }
+  },
+  "extractor-no-disponible": {
+    "mode": "extractor-down",
+    "ready": {
+      "status": 503,
+      "body": {
+        "error": "not_ready",
+        "detail": "Uno o más servicios requeridos no están disponibles.",
+        "dependencies": {
+          "extractor": "unavailable",
+          "documents": "ok"
+        }
+      }
+    },
+    "process": {
+      "status": 502,
+      "body": {
+        "error": "upstream_unavailable",
+        "detail": "El servicio extractor no está disponible."
+      }
+    }
+  },
+  "documents-no-disponible": {
+    "mode": "documents-down",
+    "ready": {
+      "status": 503,
+      "body": {
+        "error": "not_ready",
+        "detail": "Uno o más servicios requeridos no están disponibles.",
+        "dependencies": {
+          "extractor": "ok",
+          "documents": "unavailable"
+        }
+      }
+    },
+    "process": {
+      "status": 502,
+      "body": {
+        "error": "upstream_unavailable",
+        "detail": "El servicio document service no está disponible."
+      }
+    }
+  }
+}

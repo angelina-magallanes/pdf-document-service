@@ -2,7 +2,7 @@ from dataclasses import asdict
 
 from fastapi import APIRouter, Depends, Path, Query, Response
 
-from app import dependencies
+from app import dependencies, metrics
 from app.auth import bearer_scheme
 from app.domain import Document
 from app.errors import problem_spec
@@ -19,7 +19,7 @@ def health_live():
 @router.get("/health", tags=["Health"])
 @router.get("/health/ready", tags=["Health"])
 def health_ready():
-    dependencies.client.admin.command("ping")
+    dependencies.check_database()
     return {"status": "ok", "service": "documents", "db": "connected"}
 
 
@@ -52,7 +52,8 @@ def get_document_by_id(document_id: str):
     return asdict(dependencies.get_service().get_by_id(document_id))
 
 
-@router.get("/documents", response_model=list[DocumentResponse], tags=["Documents"], dependencies=[Depends(bearer_scheme)])
+@router.get("/documents", response_model=list[DocumentResponse], tags=["Documents"], dependencies=[Depends(bearer_scheme)],
+            responses={413: problem_spec("Página demasiado grande; reducir limit")})
 def list_documents(skip: int = Query(default=0, ge=0), limit: int = Query(default=20, ge=1, le=100)):
     return [asdict(document) for document in dependencies.get_service().list(skip, limit)]
 
@@ -70,3 +71,8 @@ def update_document(document_id: str, payload: DocumentUpdate):
 def delete_document(document_id: str):
     dependencies.get_service().delete(document_id)
     return Response(status_code=204)
+
+
+@router.get("/metrics", tags=["Monitoring"], dependencies=[Depends(bearer_scheme)])
+def get_metrics():
+    return metrics.exposition()

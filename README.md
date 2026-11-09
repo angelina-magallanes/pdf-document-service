@@ -29,6 +29,7 @@ resultado. Document Service recibe JSON; no recibe PDFs ni utiliza Redis.
 | DELETE | `/documents/{id}` | 204 sin cuerpo o 404. |
 | GET | `/health/live` | Vida del proceso, sin consultar MongoDB. |
 | GET | `/health`, `/health/ready` | Estado de la conexión a MongoDB. |
+| GET | `/metrics` | Métricas Prometheus; requiere Bearer. |
 | GET | `/docs`, `/openapi.json` | Documentación interactiva y contrato OpenAPI. |
 
 ### Guardar un documento
@@ -62,8 +63,17 @@ conflicto concurrente, 413 si el documento supera el límite BSON de MongoDB,
 422 para datos inválidos y 503 si la base no está disponible o el servicio está
 saturado. El 503 incluye `Retry-After: 1`.
 
-El límite de MongoDB se aplica al Markdown y sus metadatos; es distinto del límite
-sobre el PDF de entrada. El servicio propaga `X-Request-ID` y `X-Audit-Id` válidos,
+El JSON entrante tiene un límite configurable de **4 MiB** y un plazo total de
+recepción de **15 segundos**. Se cuentan bytes mientras llegan, incluso sin
+Content-Length, antes de acumular un cuerpo ilimitado. El límite excedido devuelve
+413 y el plazo agotado 408. Estos límites corresponden al JSON de Documents, no
+al PDF de entrada del Extractor.
+
+El listado conserva todos sus campos, incluido `content`, pero tiene un presupuesto
+conservador configurable de **8 MiB** por página. Si lo excede devuelve 413: reducir
+`limit` o consultar por ID. No trunca contenido ni devuelve páginas parciales.
+MongoDB entrega lotes de un documento y el cursor se cierra incluso al fallar.
+También se conserva el rechazo por tamaño BSON de MongoDB. El servicio propaga `X-Request-ID` y `X-Audit-Id` válidos,
 genera un request ID si falta y registra solicitudes en stdout sin incluir sus cuerpos.
 
 ## Autenticación entre servicios
@@ -118,8 +128,7 @@ antes de desplegar esta revisión: una API que no envíe la credencial recibirá
 Esta autenticación identifica a los consumidores que conocen el secreto; no
 implementa usuarios, roles ni permisos por documento. Transportar el token por
 HTTPS si las llamadas atraviesan redes no confiables. No publicar MongoDB sin
-los controles propios de la base. El servicio mantiene el límite BSON existente;
-no incorpora en esta revisión un límite HTTP adicional del cuerpo.
+los controles propios de la base. Los límites de cuerpo, página y BSON se aplican además de la autenticación.
 
 ## Arquitectura
 
@@ -135,10 +144,14 @@ no incorpora en esta revisión un límite HTTP adicional del cuerpo.
 | `app/service.py` | Lógica de creación y recuperación de duplicados. |
 | `app/repository.py` | Adaptador de persistencia para MongoDB. |
 | `app/database.py` | Conexión y configuración del pool. |
+| `app/settings.py` | Límites configurables de recepción y listado. |
+| `app/body_limit.py` | Conteo incremental de bytes y plazo de recepción. |
+| `app/storage_errors.py` | Traducción de errores MongoDB al contrato del dominio. |
+| `app/metrics.py` | Contadores, histograma y exposición Prometheus. |
 | `app/errors.py` | Respuestas HTTP de error. |
 
 Cada proceso admite 16 solicitudes simultáneas por defecto y rechaza las adicionales
-con 503. El pool admite hasta 16 conexiones de aplicación por servidor y proceso;
+con 503. El cupo se conserva hasta completar el envío de la respuesta. El pool admite hasta 16 conexiones de aplicación por servidor y proceso;
 la espera por una conexión está limitada a 200 ms. Ambos límites son configurables
 y se multiplican con los procesos y las réplicas. Se deben medir en el entorno de
 uso antes de ajustarlos. `/health/live` permanece disponible cuando se alcanza el
@@ -162,6 +175,9 @@ Las variables tienen estos valores predeterminados:
 | `MONGODB_WAIT_QUEUE_MS` | `200` | Espera máxima por una conexión del pool. |
 | `DOCUMENTS_MAX_IN_FLIGHT` | `16` | Solicitudes de documentos y readiness admitidas por proceso. |
 | `PORT` | `8000` | Puerto interno del servicio. |
+| `DOCUMENTS_MAX_BODY_BYTES` | `4194304` | Máximo del cuerpo HTTP completo, en bytes. |
+| `DOCUMENTS_MAX_LIST_BYTES` | `8388608` | Presupuesto conservador del listado JSON completo. |
+| `DOCUMENTS_BODY_TIMEOUT_SECONDS` | `15` | Plazo total para recibir el cuerpo HTTP. |
 | `LOG_LEVEL` | `INFO` | Nivel de logs. |
 | `TRAEFIK_DOCUMENTS_HOST` | `documents.universidad.localhost` | Host de Traefik. |
 | `TRAEFIK_ENTRYPOINT` | `web` | Entry point de Traefik. |
@@ -235,18 +251,21 @@ Compose; no necesita activar el entorno virtual:
 python3 scripts/integration_stack.py
 ```
 
-El comando verifica las copias, construye las imágenes, ejecuta el flujo y limpia
-los contenedores, red y volúmenes temporales. Los resultados quedan en
-`.integration/stack/runs/<identificador>/summary.json`. Consultar la
-[guía de integración](integration/current/README.md) para versiones, limpieza y
-alcance. La ejecución registrada aprobó el flujo completo con el Extractor `6720c32`
-y Documents `b851105`; no valida el proxy compartido ni pruebas de dos réplicas.
-Esa revisión es anterior a la autenticación Bearer: el comando reproduce el
-contrato anterior y no verifica los cambios locales de seguridad. Para probar
-la nueva revisión de punta a punta se necesita primero adaptar el consumidor y
-la configuración del stack, fijar sus nuevos commits y repetir el escenario.
+El comando verifica las copias, construye las imágenes y retira los recursos
+exclusivos de la prueba. El manifiesto fija API `e191097`, con soporte Bearer,
+Extractor `6720c32` y Documents `b4fd3df`. Genera una credencial temporal propia,
+la inyecta en los consumidores y redacta el secreto del registro de configuración.
+Para verificar **los cambios de tu árbol de trabajo**, ejecutar:
 
-### Carga sencilla
+```bash
+python3 scripts/integration_stack.py --local-documents
+```
+
+Este modo registra hashes de los archivos construidos; no los presenta como un
+commit publicado. Consultar la [guía de integración](integration/current/README.md)
+y la [evidencia](integration/current/validation.md). No modifica el stack compartido.
+
+### Carga de Documents
 
 Con k6 y una instancia que use una **base de pruebas aislada**:
 
@@ -259,8 +278,32 @@ k6 run -e RUN_ID=prueba-001 -e BASE_URL=http://documents.universidad.localhost t
 ```
 
 El script crea, consulta y elimina documentos. Usa 5 usuarios durante 15 segundos
-por defecto; admite `VUS` y `DURATION`. Registrar errores, throughput, latencias,
-CPU, memoria y réplicas. Esta prueba no reemplaza el benchmark del Extractor.
+por defecto; admite `VUS`, `DURATION`, `CONTENT_BYTES` y `P95_MS`. `PROFILE=spike`
+reproduce las rampas 10/20/10 segundos hasta 100 usuarios, sobre el CRUD de Documents.
+Cada iteración hace hasta tres solicitudes: no equivale a una extracción de PDF.
+
+Para construir y probar únicamente recursos temporales, con captura de CPU/memoria:
+
+```bash
+docker build -t pdf-document-service-validation:local .
+python3 scripts/load_isolated.py --image pdf-document-service-validation:local
+python3 scripts/load_isolated.py --image pdf-document-service-validation:local --profile spike
+```
+
+Requiere descargar previamente la imagen de k6 fijada por digest en
+`scripts/load_isolated.py` (o indicar una imagen local con `--k6-image`). Registra los IDs reales de las imágenes, métricas y recursos en
+`.integration/load/`. No necesita un token real ni publica puertos.
+
+También hay carga fija de lectura con Vegeta instalado y una base aislada:
+
+```bash
+python3 scripts/vegeta_documents.py --base-url http://127.0.0.1:8001 --isolated-test-database
+```
+
+Usa el token del entorno, crea un documento propio, ejecuta 50 lecturas/s durante
+30 segundos y lo elimina al terminar. El target con credencial vive en un directorio
+temporal privado y se retira. Estas pruebas no reemplazan k6/Vegeta sobre `/extract`
+con los PDFs oficiales. Consultar [alcance académico](docs/cumplimiento.md).
 
 ## Evidencia
 
@@ -314,13 +357,13 @@ escritura en su volumen; estas restricciones se aplican a Documents.
   no se presenta como una integración implementada en este repositorio.
 - **Factor XI:** logs como eventos a stdout, con método, ruta, estado, duración y
   correlación; no se registran cuerpos ni tokens. La recolección, retención y
-  consulta centralizada pertenecen a infraestructura. No hay historial persistente
-  de auditoría ni exportación de métricas Prometheus o trazas distribuidas; instalar
-  dependencias de telemetría no demuestra que estén instrumentadas.
+  consulta centralizada pertenecen a infraestructura. `/metrics` exporta contadores,
+  histograma HTTP y métricas del proceso; requiere Bearer y normaliza etiquetas.
+  No hay historial persistente de auditoría ni trazas distribuidas completas.
 
-Prometheus/Grafana y la integración Consul se acuerdan con infraestructura. Si se
-requiere scraping, primero se define el contrato de métricas del servicio y luego
-se implementa y prueba; no se considera cubierto por los endpoints de salud.
+Las plantillas de Prometheus, alertas y dashboard de Grafana están en `monitoring/`.
+Su instalación en el entorno compartido y Consul se coordinan con infraestructura.
+La [guía operativa](docs/operacion.md) detalla métricas, secretos, incidentes y rollback.
 
 ## Validación automática
 

@@ -33,6 +33,18 @@ class DocumentConflict(Exception):
     pass
 
 
+class PersistenceUnavailable(Exception):
+    pass
+
+
+class DocumentTooLarge(Exception):
+    pass
+
+
+class PageTooLarge(Exception):
+    pass
+
+
 class DocumentRepository(Protocol):
     def insert(self, document: Document) -> Document: ...
     def get_by_checksum(self, checksum: str) -> Document: ...

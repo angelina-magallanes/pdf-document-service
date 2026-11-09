@@ -131,3 +131,25 @@ def test_logs_de_docker_no_contaminan_json_del_cliente(tmp_path):
     ], log=log)
     assert json.loads(output) == {"ok": True}
     assert "mensaje de Docker" in (tmp_path / "probe.log.stderr").read_text()
+
+
+def test_authenticated_environment_never_uses_real_secret(monkeypatch):
+    monkeypatch.setenv('DOCUMENTS_API_TOKEN', 'private-user-secret')
+    paths = runner.source_paths(runner.load_versions())
+    env, values, _ = runner.environment('20261029210000-1234abcd', paths, authenticated=True)
+    assert env['DOCUMENTS_API_TOKEN'] != 'private-user-secret'
+    assert len(env['DOCUMENTS_API_TOKEN']) >= 32
+    assert 'DOCUMENTS_API_TOKEN' not in values
+
+
+def test_rendered_configuration_redacts_token(isolated_config, monkeypatch, tmp_path):
+    config, values = isolated_config
+    values['authenticated'] = True
+    token = 'temporary-test-secret-only-1234567890'
+    for name in ('documents', 'api', 'client'):
+        config['services'][name].setdefault('environment', {})['DOCUMENTS_API_TOKEN'] = token
+    monkeypatch.setattr(runner, 'command', lambda *args, **kwargs: json.dumps(config))
+    runner.render_stack([], {'DOCUMENTS_API_TOKEN': token}, values, tmp_path)
+    saved = (tmp_path / 'compose-config.json').read_text()
+    assert token not in saved
+    assert saved.count('REDACTED') == 3
