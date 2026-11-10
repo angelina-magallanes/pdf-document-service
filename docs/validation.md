@@ -1,5 +1,22 @@
 # Validación de Document Service
 
+## Actualización de dependencias (10/11/2026)
+
+Se actualizaron FastAPI 0.150.0 → 0.162.3, Pydantic 2.14.1 → 2.14.3,
+pydantic-core 2.50.1 → 2.50.4 y pytest 9.1.1 → 9.2.0. Se regeneraron `uv.lock`
+y `requirements.txt`. Las 26 dependencias del lock, incluidas las de desarrollo,
+coincidían con las últimas versiones publicadas en PyPI al consultar el 10/11/2026.
+
+Las **153 pruebas** pasaron con MongoDB temporal; la imagen actualizada aprobó la
+validación HTTP aislada, autenticación, caída y recuperación de MongoDB. La auditoría
+`pip-audit` de las dependencias de producción y desarrollo no encontró vulnerabilidades
+conocidas. Se mantiene un aviso de deprecación de Starlette sobre su cliente de prueba.
+Un primer intento de integración completa falló durante el arranque por timeouts
+en MongoDB y en el worker del Extractor; sus recursos temporales se retiraron.
+Un segundo intento se interrumpió por un reinicio de la VM y también se limpiaron
+sus recursos. La integración completa con estas versiones queda pendiente de repetir.
+
+
 ## Seguimiento del cierre de entrega (09/11/2026)
 
 El commit publicado `7469779965bc74362e8412668565e6ebc4777d59` se fijó en

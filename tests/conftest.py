@@ -7,5 +7,6 @@ def api_token(monkeypatch):
 
     token = "test-only-documents-token-0123456789"
     monkeypatch.setenv("DOCUMENTS_API_TOKEN", token)
-    monkeypatch.setattr(api.app.state, "api_token", token)
+    # State stores attributes in a mapping; pytest 9.2 restores that mapping correctly.
+    monkeypatch.setitem(api.app.state._state, "api_token", token)
     return token
