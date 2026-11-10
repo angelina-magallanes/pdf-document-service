@@ -7,7 +7,8 @@ import json
 from app import settings
 from app.storage_errors import storage_operation
 
-from app.domain import Document, DocumentNotFound, DuplicateDocument, InvalidDocumentId, PageTooLarge
+from app.models.document import Document
+from app.models.errors import DocumentNotFound, InvalidDocumentId, PageTooLarge
 
 
 class MongoDocumentRepository:

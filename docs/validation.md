@@ -1,5 +1,29 @@
 # Validación de Document Service
 
+## Correcciones de estructura y empaquetado (10/11/2026)
+
+Se organizaron las capas en `app/routers/`, `app/services/`, `app/repositories/`,
+`app/models/` y `app/schemas/`. Se actualizaron imports y documentación. El ejecutor
+de integración ahora registra también hashes de los módulos en subcarpetas.
+
+El proyecto usa `pyproject.toml` y `uv.lock`; se retiró el `requirements.txt`
+versionado. Para la auditoría se exportan temporalmente las dependencias desde el
+lock. El workflow instala uv con la acción oficial y ejecuta pip-audit con `uvx`.
+Se comprobó localmente que el lock está actualizado y que la auditoría no encontró
+vulnerabilidades conocidas. El workflow modificado todavía no se ejecutó en GitHub.
+
+El Dockerfile multietapa ahora declara `USER appuser`; el usuario sigue teniendo
+UID/GID 10001. Trivy 0.76.2 analizó el Dockerfile y la regla DS-0002, que verifica
+el usuario no root, pasó. Esta comprobación no sustituye el análisis de vulnerabilidades
+de la imagen completa. La imagen construida pasó la prueba HTTP aislada de CRUD,
+Bearer, persistencia y recuperación de MongoDB, y arranque sin secreto.
+
+Se ejecutaron **154 pruebas**, incluidas cinco con MongoDB temporal. Sigue apareciendo
+un aviso de deprecación de Starlette sobre el cliente de pruebas. La integración
+completa API–Extractor–Documents no se repitió en esta revisión: los últimos intentos
+quedaron documentados abajo y no acreditan esta estructura nueva.
+
+
 ## Actualización de dependencias (10/11/2026)
 
 Se actualizaron FastAPI 0.150.0 → 0.162.3, Pydantic 2.14.1 → 2.14.3,

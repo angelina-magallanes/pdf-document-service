@@ -8,13 +8,13 @@ from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app import dependencies
-from app.domain import (DocumentConflict, DocumentNotFound, InvalidDocumentId,
+from app.models.errors import (DocumentConflict, DocumentNotFound, InvalidDocumentId,
                         DocumentTooLarge, PersistenceUnavailable, PageTooLarge)
 from app.errors import (database_error, document_too_large, domain_error, http_error,
                         problem_spec, validation_error, page_too_large)
 from app.middleware import AdmissionMiddleware, trace_request
 from app.body_limit import BodyLimitMiddleware
-from app.routes import router
+from app.routers.documents import router
 
 logging.basicConfig(level=os.getenv("LOG_LEVEL", "INFO").upper(), stream=sys.stdout)
 

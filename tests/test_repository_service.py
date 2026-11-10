@@ -2,8 +2,9 @@ from unittest.mock import Mock
 
 import pytest
 
-from app.domain import Document, DocumentConflict, DocumentNotFound, DuplicateDocument
-from app.service import DocumentService
+from app.models.document import Document
+from app.models.errors import DocumentConflict, DocumentNotFound, DuplicateDocument
+from app.services.documents import DocumentService
 
 
 def document():

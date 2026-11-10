@@ -10,9 +10,9 @@ from starlette.exceptions import HTTPException
 
 from app import dependencies, settings
 from app.body_limit import LimitedReceive
-from app.domain import PageTooLarge
+from app.models.errors import PageTooLarge
 from app.main import app
-from app.repository import MongoDocumentRepository
+from app.repositories.mongodb import MongoDocumentRepository
 
 
 @pytest.fixture

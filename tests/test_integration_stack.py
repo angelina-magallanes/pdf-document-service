@@ -153,3 +153,16 @@ def test_rendered_configuration_redacts_token(isolated_config, monkeypatch, tmp_
     saved = (tmp_path / 'compose-config.json').read_text()
     assert token not in saved
     assert saved.count('REDACTED') == 3
+
+
+def test_source_hashes_include_nested_application_modules(tmp_path):
+    for name in ("Dockerfile", "pyproject.toml", "uv.lock", "app/routers/documents.py", "app/models/document.py"):
+        path = tmp_path / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(name)
+    hashes = runner.source_hashes(tmp_path)
+    assert "app/routers/documents.py" in hashes
+    assert "app/models/document.py" in hashes
+    before = hashes["app/routers/documents.py"]
+    (tmp_path / "app/routers/documents.py").write_text("changed")
+    assert runner.source_hashes(tmp_path)["app/routers/documents.py"] != before

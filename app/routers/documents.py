@@ -4,9 +4,9 @@ from fastapi import APIRouter, Depends, Path, Query, Response
 
 from app import dependencies, metrics
 from app.auth import bearer_scheme
-from app.domain import Document
+from app.models.document import Document
 from app.errors import problem_spec
-from app.schemas import DocumentCreate, DocumentResponse, DocumentUpdate
+from app.schemas.documents import DocumentCreate, DocumentResponse, DocumentUpdate
 
 router = APIRouter()
 

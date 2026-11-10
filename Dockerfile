@@ -19,6 +19,6 @@ RUN python -m pip uninstall --yes pip \
     && rm -rf /usr/local/lib/python3.14/ensurepip
 COPY --from=builder /app/.venv /app/.venv
 COPY app/ ./app/
-USER 10001:10001
+USER appuser
 EXPOSE 8000
 CMD ["sh", "-c", "exec python -m uvicorn app.main:app --host 0.0.0.0 --port \"${PORT:-8000}\" --timeout-graceful-shutdown 10"]

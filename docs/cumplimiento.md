@@ -8,8 +8,9 @@ cada patrón en cada componente.
 
 ## Arquitectura y código limpio
 
-Presentación (`routes`, `schemas`) → aplicación (`service`) → interfaz de dominio
-(`domain`) → adaptador MongoDB (`repository`, `database`). Los errores del driver
+Presentación (`routers`, `schemas`) → aplicación (`services`) → dominio (`models` y
+la interfaz en `repositories/base.py`) → adaptador MongoDB (`repositories/mongodb.py`,
+`database.py`). Los errores del driver
 se traducen a excepciones de dominio; HTTP no importa PyMongo. Los DTO evitan
 exponer ObjectId o estructuras internas de la colección. La admisión, autenticación,
 correlación y observabilidad tienen funciones separadas.

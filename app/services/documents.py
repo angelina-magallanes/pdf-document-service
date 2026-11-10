@@ -1,4 +1,6 @@
-from app.domain import Document, DocumentConflict, DocumentNotFound, DocumentRepository, DuplicateDocument
+from app.models.document import Document
+from app.models.errors import DocumentConflict, DocumentNotFound, DuplicateDocument
+from app.repositories.base import DocumentRepository
 
 
 class DocumentService:

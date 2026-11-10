@@ -174,6 +174,11 @@ def cleanup(run_id, versions):
     print(f"Recursos temporales de {run_id} retirados.", flush=True)
 
 
+def source_hashes(root):
+    files = [root / "Dockerfile", root / "pyproject.toml", root / "uv.lock", *sorted((root / "app").rglob("*.py"))]
+    return {str(path.relative_to(root)): hashlib.sha256(path.read_bytes()).hexdigest() for path in files}
+
+
 def run_integration(versions, paths, *, authenticated=False, local_documents=False):
     run_id = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S") + "-" + uuid.uuid4().hex[:8]
     env, values, run_dir = environment(run_id, paths, authenticated=authenticated)
@@ -189,8 +194,7 @@ def run_integration(versions, paths, *, authenticated=False, local_documents=Fal
                "checks": [], "passed": False, "cleanup_ok": False,
                "authenticated": authenticated, "local_documents": local_documents}
     if local_documents:
-        files = [ROOT / "Dockerfile", ROOT / "pyproject.toml", ROOT / "uv.lock", *sorted((ROOT / "app").glob("*.py"))]
-        summary["documents_source_sha256"] = {str(p.relative_to(ROOT)): hashlib.sha256(p.read_bytes()).hexdigest() for p in files}
+        summary["documents_source_sha256"] = source_hashes(ROOT)
     started = False
 
     def step(name, arguments):

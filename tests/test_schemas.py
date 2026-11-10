@@ -1,7 +1,7 @@
 import pytest
 from pydantic import ValidationError
 
-from app.schemas import DocumentCreate, DocumentUpdate
+from app.schemas.documents import DocumentCreate, DocumentUpdate
 
 
 def test_normaliza_checksum():

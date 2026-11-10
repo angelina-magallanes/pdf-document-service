@@ -21,12 +21,15 @@ el tamaño del JSON extraído.
 
 ## Publicación
 
+Este apartado describe la entrega histórica de límites y observabilidad. La
+organización de capas y las dependencias cambiaron en una revisión posterior.
+
 Revisar el diff y usar un commit como:
 
 ```bash
 git diff --check
 git status --short
-git add app tests scripts monitoring docs integration/current .env.example docker-compose.yml README.md pyproject.toml uv.lock requirements.txt .github/workflows/ci.yml
+git add app tests scripts monitoring docs integration/current .env.example docker-compose.yml README.md pyproject.toml uv.lock .github/workflows/ci.yml
 git commit -m "feat(resources)!: limitar memoria y completar observabilidad de Documents" -m "BREAKING CHANGE: limitar el cuerpo HTTP a 4 MiB y 15 segundos, y el listado a un presupuesto de 8 MiB; limites configurables por entorno."
 ```
 

@@ -6,8 +6,8 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException
 
-from app.schemas import Problem
-from app.domain import (DocumentNotFound, InvalidDocumentId, DocumentTooLarge,
+from app.schemas.documents import Problem
+from app.models.errors import (DocumentNotFound, InvalidDocumentId, DocumentTooLarge,
                         PersistenceUnavailable, PageTooLarge)
 
 logger = logging.getLogger(__name__)

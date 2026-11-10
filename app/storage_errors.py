@@ -3,7 +3,7 @@ from functools import wraps
 from pymongo.errors import DocumentTooLarge as MongoDocumentTooLarge
 from pymongo.errors import DuplicateKeyError, OperationFailure, PyMongoError
 
-from app.domain import DocumentTooLarge, DuplicateDocument, PersistenceUnavailable
+from app.models.errors import DocumentTooLarge, DuplicateDocument, PersistenceUnavailable
 
 
 def storage_operation(operation):

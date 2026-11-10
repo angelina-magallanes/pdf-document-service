@@ -6,8 +6,8 @@ from fastapi.concurrency import run_in_threadpool
 
 from app.auth import load_api_token
 from app.database import client, documents, max_inflight
-from app.repository import MongoDocumentRepository
-from app.service import DocumentService
+from app.repositories.mongodb import MongoDocumentRepository
+from app.services.documents import DocumentService
 from app.storage_errors import storage_operation
 
 admission = BoundedSemaphore(max_inflight)

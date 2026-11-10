@@ -135,14 +135,15 @@ los controles propios de la base. Los límites de cuerpo, página y BSON se apli
 | Archivo | Responsabilidad |
 | --- | --- |
 | `app/main.py` | Composición de la aplicación y registro de componentes. |
-| `app/routes.py` | Rutas HTTP de documentos y salud. |
+| `app/routers/documents.py` | Rutas HTTP de documentos y salud. |
 | `app/middleware.py` | Autenticación previa al cuerpo, correlación y admisión. |
 | `app/dependencies.py` | Recursos compartidos, construcción del servicio y ciclo de vida. |
 | `app/auth.py` | Validación del secreto y autenticación Bearer. |
-| `app/schemas.py` | Modelos de entrada y salida de la API. |
-| `app/domain.py` | Modelo de documento, interfaz de repositorio y errores del dominio. |
-| `app/service.py` | Lógica de creación y recuperación de duplicados. |
-| `app/repository.py` | Adaptador de persistencia para MongoDB. |
+| `app/schemas/documents.py` | Modelos de entrada y salida de la API. |
+| `app/models/` | Entidad de documento y errores del dominio. |
+| `app/repositories/base.py` | Interfaz del repositorio del dominio. |
+| `app/services/documents.py` | Lógica de creación y recuperación de duplicados. |
+| `app/repositories/mongodb.py` | Adaptador de persistencia para MongoDB. |
 | `app/database.py` | Conexión y configuración del pool. |
 | `app/settings.py` | Límites configurables de recepción y listado. |
 | `app/body_limit.py` | Conteo incremental de bytes y plazo de recepción. |
@@ -318,18 +319,19 @@ con los PDFs oficiales. Consultar [alcance académico](docs/cumplimiento.md).
 `pyproject.toml` declara las dependencias directas; `uv.lock` fija la resolución
 completa. `uv sync --locked` falla si el manifiesto y el bloqueo no coinciden.
 Las dependencias de pruebas están en el grupo `dev`; Docker instala solo producción
-con `uv sync --locked --no-dev`. `requirements.txt` es una exportación de producción
-con hashes para auditoría y compatibilidad, no se edita manualmente:
+con `uv sync --locked --no-dev`. El repositorio no necesita `requirements.txt`:
+`uv.lock` es la fuente de las versiones. Para auditar las dependencias de producción
+con una herramienta que requiera ese formato, generar una exportación temporal:
 
 ```bash
 uv lock
-uv export --locked --no-dev --no-emit-project -o requirements.txt
+uv export --locked --no-dev --no-emit-project -o /tmp/documents-requirements.txt
 ```
 
 La construcción tiene una etapa con uv y una etapa de ejecución sin uv, pip ni pytest.
 Las imágenes base están fijadas por digest; deben actualizarse periódicamente y
 volver a auditarse. El código y el entorno pertenecen a root y el proceso usa el
-UID/GID 10001 sin privilegios. Compose configura raíz de solo lectura, eliminación
+usuario `appuser` (UID/GID 10001) sin privilegios. Compose configura raíz de solo lectura, eliminación
 de capacidades, prohibición de adquirir privilegios y un `/tmp` temporal limitado.
 El secreto se recibe en ejecución y no se copia a la imagen. MongoDB necesita
 escritura en su volumen; estas restricciones se aplican a Documents.
@@ -368,7 +370,7 @@ La [guía operativa](docs/operacion.md) detalla métricas, secretos, incidentes 
 ## Validación automática
 
 `.github/workflows/ci.yml` ejecuta en push y pull request las pruebas con MongoDB
-7 temporal, verifica el bloqueo y la exportación de dependencias, audita paquetes
+7 temporal, verifica el bloqueo y audita una exportación temporal de paquetes
 de producción y construye la imagen. Trivy rechaza vulnerabilidades altas o críticas con arreglo
 disponible; los avisos sin arreglo deben revisarse aparte. También comprueba usuario sin privilegios y
 la ausencia de pytest en ejecución. La ejecución remota solo existe después de
